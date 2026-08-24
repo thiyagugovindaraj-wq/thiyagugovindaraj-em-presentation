@@ -182,41 +182,36 @@
 
   /* ---------- layout ---------- */
   .shell{
-    display:grid;
-    grid-template-columns:270px 1fr;
     max-width:1280px;
     margin:0 auto;
     min-height:calc(100vh - 61px);
     position:relative;
     z-index:1;
-    align-items:start;
-  }
-  @media (max-width:900px){
-    .shell{grid-template-columns:1fr;}
   }
 
   /* ---------- sidebar ---------- */
   nav.sidebar{
     border-right:1px solid var(--border);
     padding:28px 16px;
-    position:sticky;
+    position:fixed;
     top:61px;
-    align-self:start;
+    left:max(0px, calc((100vw - 1280px) / 2));
+    width:270px;
     height:calc(100vh - 61px);
     overflow-y:auto;
-    background:rgba(7,8,15,0.4);
+    background:rgba(7,8,15,0.95);
     backdrop-filter:blur(10px);
-    width:270px;
-    min-width:270px;
+    z-index:50;
   }
   @media (max-width:900px){
     nav.sidebar{
       position:static;
+      width:100%;
       height:auto;
       border-right:none;
       border-bottom:1px solid var(--border);
       padding:16px 16px 10px;
-      background:transparent;
+      background:rgba(7,8,15,0.95);
     }
     .sidebar .nav-list{
       display:flex;
@@ -397,8 +392,13 @@
   @media (max-width:900px){ .sidebar-footer{display:none;} }
 
   /* ---------- main content ---------- */
-  main{padding:36px 40px 60px;min-width:0;overflow-x:hidden;contain:inline-size;}
-  @media (max-width:600px){ main{padding:24px 18px 48px;} }
+  main{
+    padding:36px 40px 60px;
+    margin-left:270px;
+    min-height:calc(100vh - 61px);
+    overflow-x:hidden;
+  }
+  @media (max-width:900px){ main{padding:24px 18px 48px;margin-left:0;} }
 
   .panel{
     display:none;
@@ -877,6 +877,7 @@
     max-width:1280px;
     margin:0 auto;
     padding:24px 40px 44px;
+    padding-left:calc(270px + 40px);
     border-top:1px solid var(--border);
     font-family:var(--mono);
     font-size:11px;
@@ -887,6 +888,9 @@
     gap:8px;
     position:relative;
     z-index:1;
+  }
+  @media (max-width:900px){
+    footer.global{padding-left:40px;}
   }
   footer.global::before{
     content:'';
