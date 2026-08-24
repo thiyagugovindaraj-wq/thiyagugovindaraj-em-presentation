@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TAS (Test Administration System)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#151A21;
+  --muted:#5B6472;
+  --faint:#94A0AF;
+  --border:#E4E7EC;
+  --border-soft:#EEF0F3;
+  --bg:#F5F6F8;
+  --surface:#FFFFFF;
+  --surface-2:#FAFBFC;
+
+  --brand:#FF7A1A;
+  --brand-600:#E85D04;
+  --brand-tint:#FFF1E6;
+
+  --info:#2F6FED;
+  --info-tint:#EAF1FF;
+  --success:#12805C;
+  --success-tint:#E7F7F0;
+  --danger:#D0342C;
+  --danger-tint:#FDEBEA;
+  --warn:#B7791F;
+  --warn-tint:#FFF3DE;
+  --purple:#6C4FD1;
+  --purple-tint:#F1EDFC;
+
+  --r-lg:14px;
+  --r-md:10px;
+  --r-sm:7px;
+  --sans:'Inter', system-ui, sans-serif;
+  --mono:'IBM Plex Mono', monospace;
+  --shadow-1: 0 1px 2px rgba(21,26,33,0.05);
+  --shadow-2: 0 10px 30px -10px rgba(21,26,33,0.18);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:13.5px;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{margin:0; font-family:var(--sans);}
+p{margin:0;}
+button, select, input{font-family:inherit; font-size:inherit;}
+a{color:inherit; text-decoration:none;}
+::selection{background:var(--brand); color:#fff;}
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible{
+  outline:2px solid var(--brand); outline-offset:1px; border-radius:4px;
+}
+.hidden{display:none !important;}
+
+/* ============ SHELL LAYOUT ============ */
+.shell{display:flex; min-height:100vh;}
+
+/* ---- sidebar ---- */
+:root{
+  --side-w-expanded: 268px;
+  --side-w-collapsed: 76px;
+  --grad-1:#FF7A1A;
+  --grad-2:#FF4D6D;
+  --grad-3:#C4266B;
+  --active-red:#E1483D;
+  --active-red-tint:#FDEDEC;
+}
+.sidebar{
+  width:var(--side-w-expanded);
+  flex:none;
+  background:var(--surface-2);
+  display:flex; flex-direction:column;
+  position:sticky; top:0; height:100vh;
+  border-right:1px solid var(--border);
+  transition:width .22s ease;
+  overflow:hidden;
+}
+.sidebar.collapsed{ width:var(--side-w-collapsed); }
+@media (prefers-reduced-motion:reduce){ .sidebar{ transition:none; } }
+
+.sidebar-head{
+  display:flex; align-items:center; gap:10px; padding:14px 16px;
+  background:linear-gradient(115deg, var(--grad-1) 0%, var(--grad-2) 55%, var(--grad-3) 100%);
+  flex:none;
+}
+.sidebar.collapsed .sidebar-head{ justify-content:center; padding:14px 10px; }
+.brandmark{
+  width:34px;height:34px; border-radius:10px; flex:none;
+  background:rgba(255,255,255,0.22);
+  border:1px solid rgba(255,255,255,0.35);
+  display:flex; align-items:center; justify-content:center;
+}
+.brandmark svg{width:18px;height:18px;}
+.brand-wordmark{ overflow:hidden; white-space:nowrap; opacity:1; transition:opacity .15s ease, width .2s ease; }
+.sidebar.collapsed .brand-wordmark{ opacity:0; width:0; }
+.brand-wordmark .l1{ font-size:16px; font-weight:800; color:#fff; letter-spacing:0.02em; }
+.brand-wordmark .l2{ font-size:9.5px; color:rgba(255,255,255,0.85); font-family:var(--mono); letter-spacing:0.1em; margin-top:1px; }
+
+.collapse-btn{
+  margin-left:auto; width:26px;height:26px; border-radius:8px; border:1px solid rgba(255,255,255,0.35);
+  background:rgba(255,255,255,0.16); color:#fff; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; flex:none; transition:transform .22s ease, background .15s ease;
+}
+.collapse-btn:hover{ background:rgba(255,255,255,0.3); }
+.collapse-btn svg{ width:13px;height:13px; transition:transform .22s ease; }
+.sidebar.collapsed .collapse-btn svg{ transform:rotate(180deg); }
+.sidebar.collapsed .collapse-btn{ margin-left:0; }
+
+.sidebar-scroll{ flex:1; overflow-y:auto; overflow-x:hidden; padding:10px 12px 12px; }
+
+.navicon{
+  position:relative;
+  width:100%; height:41px; border-radius:9px; display:flex; align-items:center; gap:11px; padding:0 11px;
+  color:#4B5563; background:transparent; border:none; cursor:pointer; margin-bottom:2px;
+  border-left:3px solid transparent; font-family:inherit;
+}
+.sidebar.collapsed .navicon{ justify-content:center; padding:0; }
+.navicon svg.ic{width:18px;height:18px; flex:none;}
+.navicon:hover{background:var(--surface); color:var(--ink);}
+.navicon.active{
+  background:var(--active-red-tint);
+  color:var(--active-red); font-weight:700; border-left-color:var(--active-red);
+}
+.navicon .navlabel{
+  font-size:13.3px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  flex:1; text-align:left;
+}
+.sidebar.collapsed .navicon .navlabel{ display:none; }
+.navicon .navbadge{
+  font-size:10px; font-weight:800; font-family:var(--mono); background:var(--border); color:var(--muted);
+  padding:2px 7px; border-radius:999px; flex:none;
+}
+.navicon.active .navbadge{ background:var(--active-red); color:#fff; }
+.sidebar.collapsed .navicon .navbadge{ display:none; }
+.navicon .expand-chev{ width:13px;height:13px; flex:none; color:var(--faint); transition:transform .18s ease; }
+.navgroup.open > .navicon .expand-chev{ transform:rotate(90deg); }
+.sidebar.collapsed .navicon .expand-chev{ display:none; }
+
+.navicon .tip{
+  position:absolute; left:70px; top:50%; transform:translateY(-50%) translateX(-4px);
+  background:#1E242D; color:#fff; padding:7px 11px; border-radius:8px; font-size:12px; font-weight:600;
+  white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .12s ease, transform .12s ease;
+  box-shadow:var(--shadow-2); z-index:200; display:none;
+}
+.sidebar.collapsed .navicon .tip{ display:block; }
+.sidebar.collapsed .navicon:hover .tip{opacity:1; transform:translateY(-50%) translateX(0);}
+
+.navgroup{ margin-bottom:2px; }
+.subnav{
+  max-height:0; overflow:hidden; transition:max-height .22s ease;
+  margin:0 0 4px 14px; padding-left:12px; border-left:1.5px dashed var(--border);
+}
+.navgroup.open > .subnav{ max-height:220px; }
+.sidebar.collapsed .subnav{ display:none; }
+.subnav .navicon{ height:36px; border-left:none; border-radius:8px; }
+.subnav .navicon.active{
+  background:none; color:var(--active-red); font-style:italic; font-weight:700; text-decoration:underline; text-underline-offset:3px;
+}
+.subnav .navicon .ic{ width:15px;height:15px; }
+.subnav .navicon .navlabel{ font-size:12.6px; }
+
+.sidebar-spacer{flex:1;}
+
+.sidebar-profile{
+  display:flex; align-items:center; gap:10px; padding:12px 16px; border-top:1px solid var(--border);
+  flex:none;
+}
+.sidebar.collapsed .sidebar-profile{ padding:12px 10px; justify-content:center; }
+.sidebar-profile .avatar{ width:32px;height:32px; font-size:11.5px; }
+.sidebar-profile-text{ overflow:hidden; white-space:nowrap; }
+.sidebar.collapsed .sidebar-profile-text{ display:none; }
+.sidebar-profile-text .name{ font-size:12.3px; font-weight:700; color:var(--ink); }
+.sidebar-profile-text .role{ font-size:10.8px; color:var(--faint); margin-top:1px; }
+
+/* ---- topbar ---- */
+.main{flex:1; min-width:0; display:flex; flex-direction:column;}
+.topbar{
+  background:linear-gradient(180deg, #FFFFFF, #FCFCFD);
+  border-bottom:1px solid var(--border);
+  padding:14px 26px; display:flex; align-items:center; justify-content:space-between; gap:20px;
+  position:sticky; top:0; z-index:60;
+  box-shadow:0 1px 0 rgba(21,26,33,0.02);
+}
+.topbar-title h1{font-size:19px; font-weight:700;}
+.topbar-title .crumb{font-size:12px; color:var(--faint); font-family:var(--mono); margin-top:2px;}
+.topbar-right{display:flex; align-items:center; gap:14px;}
+.globalsearch{
+  display:flex; align-items:center; gap:9px; background:var(--surface-2); border:1px solid var(--border);
+  border-radius:999px; padding:9px 14px; width:280px; color:var(--faint);
+}
+.globalsearch svg{width:15px;height:15px; flex:none;}
+.globalsearch input{border:none; background:none; outline:none; width:100%; color:var(--ink); font-size:13px;}
+.iconbtn{
+  width:36px;height:36px; border-radius:10px; border:1px solid var(--border); background:var(--surface);
+  display:flex; align-items:center; justify-content:center; color:var(--muted); cursor:pointer; position:relative;
+}
+.iconbtn svg{width:16px;height:16px;}
+.iconbtn:hover{border-color:var(--brand); color:var(--brand);}
+.iconbtn .dot{position:absolute; top:7px; right:7px; width:6px;height:6px;border-radius:50%; background:var(--danger);}
+.usermenu{display:flex; align-items:center; gap:9px; cursor:pointer; padding:5px 6px 5px 5px; border-radius:999px; border:1px solid transparent;}
+.usermenu:hover{border-color:var(--border); background:var(--surface-2);}
+.avatar{width:30px;height:30px; border-radius:50%; background:linear-gradient(135deg,#6C4FD1,#2F6FED); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;}
+.usermenu .email{font-size:12.5px; font-weight:600; color:var(--ink);}
+.usermenu svg{width:13px;height:13px; color:var(--faint); transition:transform .15s ease;}
+.usermenu.open svg.chev{transform:rotate(180deg);}
+.usermenu-wrap{position:relative;}
+.usermenu-panel{
+  position:absolute; right:0; top:calc(100% + 10px); background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-lg); box-shadow:var(--shadow-2); padding:16px; min-width:200px; display:none; z-index:150;
+}
+.usermenu-panel.open{ display:block; }
+.usermenu-panel .who{ font-size:12px; color:var(--muted); margin-bottom:12px; word-break:break-all; }
+.usermenu-panel .who strong{ display:block; color:var(--ink); font-size:13px; margin-bottom:2px; }
+.signout-btn{
+  width:100%; text-align:center; padding:10px 14px; border-radius:8px; border:none; cursor:pointer;
+  background:linear-gradient(135deg, var(--grad-1), var(--grad-2)); color:#fff; font-weight:800; font-size:12.5px;
+  letter-spacing:0.04em; text-transform:uppercase; box-shadow:0 6px 14px -4px rgba(228,60,90,0.5);
+}
+.signout-btn:hover{ filter:brightness(1.05); }
+
+/* ---- content ---- */
+.content{padding:26px; flex:1;}
+.page{display:none;}
+.page.active{display:block; animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+@media (prefers-reduced-motion:reduce){ .page.active{animation:none;} }
+
+/* ============ COMPONENTS ============ */
+
+/* tabs (Test Centres sub navigation) */
+.tabrow{display:flex; gap:22px; border-bottom:1px solid var(--border); margin-bottom:20px;}
+.subtab{display:none;}
+.subtab.active{display:block; animation:fadeIn .2s ease;}
+@media (prefers-reduced-motion:reduce){ .subtab.active{animation:none;} }
+.tabbtn{
+  padding:10px 2px; background:none; border:none; cursor:pointer; font-size:13.5px; font-weight:600;
+  color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1px;
+}
+.tabbtn:hover{color:var(--ink);}
+.tabbtn.active{color:var(--brand-600); border-bottom-color:var(--brand);}
+
+/* filter card */
+.filtercard{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-1);
+  padding:18px 20px; margin-bottom:18px;
+}
+.filtergrid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px;}
+.filtergrid.cols-4{grid-template-columns:repeat(4,1fr);}
+.filtergrid.cols-2{grid-template-columns:repeat(2,1fr);}
+@media (max-width:1000px){ .filtergrid.cols-4, .filtergrid.cols-2{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));} }
+
+.field{display:flex; flex-direction:column; gap:5px;}
+.field label{font-size:11px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:0.03em;}
+.selectlike, .textlike{
+  display:flex; align-items:center; gap:8px; border:1.5px solid var(--border); border-radius:var(--r-sm);
+  padding:9px 11px; background:var(--surface); cursor:pointer; color:var(--ink); font-size:13px;
+}
+.selectlike svg.leading{width:14px;height:14px; color:var(--faint); flex:none;}
+.selectlike .chev{margin-left:auto; width:12px;height:12px; color:var(--faint); flex:none;}
+.selectlike span.ph{color:var(--faint);}
+input.textlike{width:100%;}
+input.textlike::placeholder{color:var(--faint);}
+.textlike:focus-within, input.textlike:focus{border-color:var(--brand); outline:none;}
+
+.tagfield{
+  display:flex; flex-wrap:wrap; gap:6px; align-items:center; border:1.5px solid var(--border); border-radius:var(--r-sm);
+  padding:7px 9px; background:var(--surface); min-height:38px;
+}
+.tagfield svg.leading{width:14px;height:14px; color:var(--faint); flex:none; margin-right:2px;}
+.tag{
+  display:inline-flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--border);
+  border-radius:6px; padding:4px 8px; font-size:12px; font-weight:600; color:var(--ink);
+}
+.tag button{border:none; background:none; cursor:pointer; color:var(--faint); display:flex; padding:0;}
+.tag button svg{width:11px;height:11px;}
+.tag.overflow{background:var(--ink); color:#fff; border-color:var(--ink);}
+.tagfield .chev{margin-left:auto; width:12px;height:12px; color:var(--faint);}
+
+.moreFiltersToggle{
+  display:inline-flex; align-items:center; gap:6px; color:var(--info); font-weight:700; font-size:12.5px;
+  cursor:pointer; margin-top:12px;
+}
+.moreFiltersToggle svg{width:12px;height:12px; transition:transform .15s ease;}
+.moreFiltersToggle.open svg{transform:rotate(180deg);}
+.morefilters-panel{display:none; margin-top:14px; padding-top:14px; border-top:1px dashed var(--border);}
+.morefilters-panel.open{display:block;}
+
+.filter-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:16px;}
+
+/* dropdown panel (for select-like open state) */
+.dropdownwrap{position:relative;}
+.dropdown-panel{
+  position:absolute; top:calc(100% + 6px); left:0; min-width:220px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); box-shadow:var(--shadow-2); padding:8px; z-index:100; display:none;
+}
+.dropdown-panel.open{display:block;}
+.dropdown-option{
+  display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600;
+}
+.dropdown-option:hover{background:var(--surface-2);}
+.dropdown-option .radio{width:15px;height:15px; border-radius:50%; border:1.5px solid var(--border); flex:none;}
+.dropdown-option.selected .radio{border-color:var(--brand); background:radial-gradient(circle, var(--brand) 0 5px, transparent 6px);}
+
+/* toggle switch */
+.toggle{position:relative; width:42px; height:24px; border-radius:999px; background:var(--border); cursor:pointer; flex:none; transition:background .15s ease;}
+.toggle::after{content:""; position:absolute; top:3px; left:3px; width:18px;height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.25); transition:transform .15s ease;}
+.toggle.on{background:var(--success);}
+.toggle.on::after{transform:translateX(18px);}
+.togglefield{display:flex; align-items:center; gap:10px; justify-content:flex-end;}
+.togglefield label{font-size:12.5px; color:var(--muted); font-weight:600;}
+
+/* buttons */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:7px; font-weight:700; font-size:12.8px;
+  padding:9px 16px; border-radius:var(--r-sm); border:1.5px solid transparent; cursor:pointer; white-space:nowrap;
+}
+.btn svg{width:13px;height:13px;}
+.btn-primary{background:linear-gradient(135deg, var(--brand), #FF9A44); color:#fff; box-shadow:0 6px 14px -4px rgba(255,122,26,0.5);}
+.btn-primary:hover{background:linear-gradient(135deg, var(--brand-600), var(--brand)); box-shadow:0 8px 18px -4px rgba(255,122,26,0.6);}
+.btn-dark{background:var(--ink); color:#fff;}
+.btn-dark:hover{background:#252c37;}
+.btn-ghost{background:var(--surface); color:var(--ink); border-color:var(--border);}
+.btn-ghost:hover{border-color:var(--muted);}
+.btn-danger-soft{background:var(--danger-tint); color:var(--danger); border-color:transparent;}
+.btn-sm{padding:6px 11px; font-size:11.5px;}
+.split-btn{display:inline-flex;}
+.split-btn .btn{border-radius:0;}
+.split-btn .btn:first-child{border-radius:var(--r-sm) 0 0 var(--r-sm);}
+.split-btn .btn:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0; padding:9px 10px; border-left:1px solid rgba(255,255,255,0.25);}
+
+/* results toolbar */
+.resultsbar{display:flex; align-items:center; justify-content:space-between; margin:2px 2px 12px;}
+.resultsbar .count{font-size:12.8px; color:var(--muted);}
+.resultsbar .count strong{color:var(--ink); font-weight:700;}
+.pagesize{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--info); font-weight:700; cursor:pointer;}
+.pagesize svg{width:11px;height:11px;}
+
+/* table card */
+.tablecard{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-1); overflow:hidden;}
+table.datatable{width:100%; border-collapse:collapse;}
+table.datatable thead th{
+  text-align:left; font-size:10.8px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:0.03em;
+  padding:12px 16px; border-bottom:1px solid var(--border); background:var(--surface-2); white-space:nowrap;
+}
+table.datatable thead th.sortable{cursor:pointer; display:table-cell;}
+table.datatable tbody td{
+  padding:14px 16px; border-bottom:1px solid var(--border-soft); font-size:13px; vertical-align:middle;
+}
+table.datatable tbody tr:last-child td{border-bottom:none;}
+table.datatable tbody tr:hover{background:var(--surface-2);}
+.cell-link{color:var(--info); font-weight:700; cursor:pointer;}
+.cell-link:hover{text-decoration:underline;}
+.cell-mono{font-family:var(--mono); font-size:12.3px;}
+.cell-sub{font-size:11.8px; color:var(--faint); margin-top:2px;}
+.cell-icon{display:inline-flex; align-items:center; gap:6px;}
+.cell-icon svg{width:14px;height:14px; color:var(--faint);}
+
+/* badges */
+.badge{
+  display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 9px; border-radius:999px;
+  white-space:nowrap;
+}
+.badge.success{background:var(--success-tint); color:var(--success);}
+.badge.danger{background:var(--danger-tint); color:var(--danger);}
+.badge.warn{background:var(--warn-tint); color:var(--warn);}
+.badge.info{background:var(--info-tint); color:var(--info);}
+.badge.neutral{background:var(--surface-2); color:var(--muted); border:1px solid var(--border);}
+.badge.purple{background:var(--purple-tint); color:var(--purple);}
+.badge-dot{width:6px;height:6px; border-radius:50%; background:currentColor; flex:none;}
+
+/* actions dropdown (row-level) */
+.rowaction{position:relative;}
+.rowaction-btn{
+  display:inline-flex; align-items:center; gap:5px; background:none; border:none; color:var(--info); font-weight:700; font-size:12.5px; cursor:pointer;
+}
+.rowaction-btn svg{width:12px;height:12px;}
+.rowaction-btn.solid{background:var(--danger); color:#fff; border-radius:7px; padding:7px 10px;}
+.rowaction-menu{
+  position:absolute; right:0; top:calc(100% + 4px); background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); box-shadow:var(--shadow-2); min-width:170px; padding:6px; display:none; z-index:90;
+}
+.rowaction-menu.open{display:block;}
+.rowaction-menu button{
+  width:100%; text-align:left; background:none; border:none; padding:9px 10px; border-radius:7px; font-size:12.8px;
+  font-weight:600; color:var(--ink); cursor:pointer; display:flex; align-items:center; gap:9px;
+}
+.rowaction-menu button:hover{background:var(--surface-2);}
+.rowaction-menu button.danger{color:var(--danger);}
+.rowaction-menu svg{width:13px;height:13px; color:var(--faint);}
+
+/* pagination */
+.pagination{display:flex; align-items:center; justify-content:center; gap:5px; padding:16px;}
+.pagebtn{
+  width:30px;height:30px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--muted);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12.5px; font-weight:600;
+}
+.pagebtn svg{width:12px;height:12px;}
+.pagebtn:hover{border-color:var(--brand); color:var(--brand);}
+.pagebtn.active{background:var(--brand); border-color:var(--brand); color:#fff;}
+.pagebtn:disabled{opacity:0.4; cursor:not-allowed;}
+
+/* empty state */
+.emptystate{padding:60px 20px; text-align:center; color:var(--faint);}
+.emptystate svg{width:34px;height:34px; margin-bottom:12px; opacity:0.6;}
+.emptystate .title{font-weight:700; color:var(--muted); font-size:13.5px; margin-bottom:4px;}
+
+/* checkbox */
+.chk{width:16px;height:16px; border-radius:5px; border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; flex:none;}
+.chk.checked{background:var(--brand); border-color:var(--brand); color:#fff;}
+.chk svg{width:10px;height:10px; opacity:0;}
+.chk.checked svg{opacity:1;}
+
+/* ============ HOME DASHBOARD ============ */
+.statgrid{display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:24px;}
+@media (max-width:1100px){ .statgrid{grid-template-columns:repeat(2,1fr);} }
+.statcard{background:linear-gradient(180deg, var(--surface), var(--surface-2)); border:1px solid var(--border); border-radius:var(--r-lg); padding:18px; box-shadow:var(--shadow-1); transition:transform .15s ease, box-shadow .15s ease;}
+.statcard:hover{ transform:translateY(-2px); box-shadow:var(--shadow-2); }
+.statcard .icon{width:32px;height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:12px;}
+.statcard .icon svg{width:16px;height:16px;}
+.statcard .num{font-size:24px; font-weight:800; font-family:var(--mono);}
+.statcard .lbl{font-size:12px; color:var(--muted); margin-top:3px;}
+.statcard .delta{font-size:11.5px; font-weight:700; margin-top:8px; display:inline-flex; align-items:center; gap:4px;}
+.statcard .miniprog{ height:4px; border-radius:999px; background:var(--border-soft); margin-top:12px; overflow:hidden; }
+.statcard .miniprog span{ display:block; height:100%; border-radius:999px; }
+
+.hubgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+@media (max-width:900px){ .hubgrid{grid-template-columns:1fr;} }
+.hubcard{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:20px; cursor:pointer;
+  box-shadow:var(--shadow-1); transition:border-color .15s ease, transform .1s ease;
+}
+.hubcard:hover{border-color:var(--brand); transform:translateY(-2px);}
+.hubcard .icon{width:38px;height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+.hubcard .icon svg{width:18px;height:18px;}
+.hubcard h3{font-size:14.5px; font-weight:700; margin-bottom:6px;}
+.hubcard p{font-size:12.5px; color:var(--muted); line-height:1.6;}
+
+/* ============ SESSION MANAGEMENT ============ */
+.sess-toolbar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
+.sess-toolbar .selectlike{min-width:190px;}
+.sess-toolbar .spacer{flex:1;}
+.sess-nav{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:12px;}
+.sess-nav-left{display:flex; gap:8px;}
+.sess-daterange{font-size:15px; font-weight:700;}
+.sess-view-toggle{display:flex; border:1px solid var(--border); border-radius:var(--r-sm); overflow:hidden;}
+.sess-view-toggle button{border:none; background:var(--surface); padding:8px 14px; font-weight:700; font-size:12.5px; color:var(--muted); cursor:pointer;}
+.sess-view-toggle button.active{background:var(--brand); color:#fff;}
+
+.legend{display:flex; align-items:center; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--muted); background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:10px 16px; margin-bottom:16px;}
+.legend-item{display:flex; align-items:center; gap:6px;}
+.legend-dot{width:9px;height:9px; border-radius:3px; flex:none;}
+
+.calgrid-wrap{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-1); overflow:auto;}
+.calgrid{display:grid; grid-template-columns:56px repeat(7,1fr); min-width:980px;}
+.calgrid .dayhead{padding:12px 8px; text-align:center; border-bottom:1px solid var(--border); border-left:1px solid var(--border-soft); font-size:12px; font-weight:700; position:sticky; top:0; background:var(--surface); z-index:5;}
+.calgrid .dayhead .dow{color:var(--muted);}
+.calgrid .dayhead .dd{color:var(--ink); font-size:13.5px; margin-top:2px;}
+.calgrid .dayhead.today{background:var(--brand-tint); color:var(--brand-600);}
+.calgrid .timecol{padding:0; border-bottom:1px solid var(--border-soft);}
+.calgrid .timecol span{display:block; height:64px; font-size:10.5px; color:var(--faint); padding:4px 6px; border-top:1px solid var(--border-soft); font-family:var(--mono);}
+.daycol{border-left:1px solid var(--border-soft); position:relative;}
+.hourslot{height:64px; border-top:1px solid var(--border-soft);}
+.sessblock{
+  position:absolute; left:3px; right:3px; border-radius:6px; padding:3px 6px; font-size:10.3px; font-weight:700;
+  color:#fff; overflow:hidden; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.12);
+}
+.sessblock.lrw-draft{background:#B8863B;}
+.sessblock.lrw-pub{background:#12805C;}
+.sessblock.speak-draft{background:#8B93A3;}
+.sessblock.speak-pub{background:#6C4FD1;}
+.sessblock.booked{background:var(--faint); opacity:0.55;}
+
+/* ============ REFERRAL PARTNERS MODULE ============ */
+.tabrow.nested{ gap:16px; margin-bottom:16px; }
+.tabrow.nested .tabbtn{ font-size:12.5px; padding:8px 2px; }
+
+.rp-section-title{ font-size:16px; font-weight:700; margin-bottom:14px; }
+
+.btn-details{
+  display:inline-flex; align-items:center; gap:6px; background:var(--active-red); color:#fff; border:none;
+  padding:9px 16px; border-radius:var(--r-sm); font-weight:700; font-size:12.5px; cursor:pointer; white-space:nowrap;
+}
+.btn-details:hover{ opacity:0.9; }
+.btn-details svg{ width:11px;height:11px; transition:transform .18s ease; }
+.btn-details.open svg{ transform:rotate(180deg); }
+
+.rp-list-row{ border:1px solid var(--border); border-radius:var(--r-lg); background:var(--surface); box-shadow:var(--shadow-1); margin-bottom:10px; overflow:hidden; }
+.rp-list-main{
+  display:grid; grid-template-columns:2fr 1.2fr 1fr 1.2fr auto; gap:14px; align-items:center; padding:16px 18px;
+}
+@media (max-width:1000px){ .rp-list-main{ grid-template-columns:1fr; } }
+.rp-detail{ display:none; border-top:1px solid var(--border); background:var(--surface-2); padding:18px 20px 22px; }
+.rp-detail.open{ display:block; animation:fadeIn .2s ease; }
+
+.checkdrop-panel{ min-width:340px; padding:0; }
+.checkdrop-search{ padding:10px; border-bottom:1px solid var(--border); }
+.checkdrop-search .textlike{ width:100%; padding:8px 10px; }
+.checkdrop-list{ max-height:220px; overflow-y:auto; padding:6px; }
+.checkdrop-option{ display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
+.checkdrop-option:hover{ background:var(--surface-2); }
+.checkdrop-option .cb{ width:16px;height:16px; border-radius:4px; border:1.5px solid var(--border); flex:none; display:flex; align-items:center; justify-content:center; }
+.checkdrop-option .cb svg{ width:10px;height:10px; opacity:0; }
+.checkdrop-option.checked .cb{ background:var(--active-red); border-color:var(--active-red); }
+.checkdrop-option.checked .cb svg{ opacity:1; color:#fff; }
+
+.monthyear-panel{ min-width:300px; padding:0; }
+.monthyear-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); font-weight:700; font-size:14px; }
+.monthyear-nav{ width:24px;height:24px; border-radius:7px; border:none; background:none; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.monthyear-nav:hover{ background:var(--surface-2); }
+.monthyear-nav svg{ width:12px;height:12px; }
+.monthyear-list{ max-height:200px; overflow-y:auto; padding:8px; }
+.monthyear-option{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; }
+.monthyear-option:hover:not(.disabled){ background:var(--surface-2); }
+.monthyear-option .cb{ width:15px;height:15px; border-radius:4px; border:1.5px solid var(--border); flex:none; display:flex; align-items:center; justify-content:center; }
+.monthyear-option .cb svg{ width:9px;height:9px; opacity:0; }
+.monthyear-option.checked .cb{ background:var(--active-red); border-color:var(--active-red); }
+.monthyear-option.checked .cb svg{ opacity:1; color:#fff; }
+.monthyear-option.disabled{ color:var(--faint); cursor:not-allowed; }
+.monthyear-option.disabled .cb{ border-color:var(--border-soft); }
+
+.hierarchy-list{ list-style:none; margin:0 0 20px; padding:0; display:flex; flex-direction:column; gap:8px; }
+.hierarchy-list li{ position:relative; padding-left:18px; font-size:13px; color:var(--muted); line-height:1.6; }
+.hierarchy-list li::before{ content:"•"; position:absolute; left:2px; color:var(--active-red); font-weight:700; }
+
+.tier-table{ width:100%; border-collapse:collapse; margin-top:12px; }
+.tier-table th{ text-align:left; font-size:11.5px; font-weight:700; color:var(--muted); padding:10px 12px; display:flex; align-items:center; gap:5px; }
+.tier-table th svg{ width:12px;height:12px; color:var(--faint); }
+.tier-table td{ padding:6px 12px 14px; }
+.tier-table input{ width:100%; padding:9px 11px; border:1.5px solid var(--border); border-radius:var(--r-sm); font-size:13.5px; background:var(--surface); font-family:inherit; }
+.tier-table input.readonly{ background:var(--surface-2); color:var(--muted); }
+.tier-table td.tiername{ font-weight:700; font-size:13px; padding-top:9px; }
+
+.copy-inline{ background:none; border:none; color:var(--faint); cursor:pointer; padding:0; margin-left:4px; display:inline-flex; vertical-align:middle; }
+.copy-inline svg{ width:12px;height:12px; }
+.copy-inline:hover{ color:var(--info); }
+
+.rp-note{ font-size:12.8px; color:var(--muted); padding:16px 0; }
+
+/* ============ PROFILE / ROW EXPANDING ============ */
+.viewdetails{color:var(--info); font-weight:700; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; margin-top:6px; background:none; border:none; font-family:inherit; padding:0;}
+.viewdetails svg{width:11px;height:11px; transition:transform .15s ease;}
+.viewdetails.open svg{transform:rotate(180deg);}
+
+.detail-row td{ background:var(--surface-2); padding:0 !important; border-bottom:1px solid var(--border-soft); }
+.detail-row.closed{ display:none; }
+.detail-panel{ padding:18px 20px 22px; animation:fadeIn .2s ease; }
+@media (prefers-reduced-motion:reduce){ .detail-panel{ animation:none; } }
+
+.accordion{ border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); margin-bottom:10px; overflow:hidden; }
+.accordion-head{
+  display:flex; align-items:center; gap:14px; padding:14px 16px; cursor:pointer; background:none; border:none; width:100%;
+  text-align:left; font-family:inherit;
+}
+.accordion-head.static{ cursor:default; }
+.accordion-head .bar{ width:3px; align-self:stretch; background:var(--active-red); border-radius:2px; flex:none; min-height:18px; }
+.accordion-head .atitle{ font-weight:700; font-size:13px; }
+.accordion-head .aval{ margin-left:8px; font-size:13.5px; font-weight:500; color:var(--ink); }
+.accordion-head .chev{ width:14px;height:14px; color:var(--faint); transition:transform .18s ease; flex:none; margin-left:auto; }
+.accordion.open .accordion-head .chev{ transform:rotate(180deg); }
+.accordion-head .ameta{ margin-left:auto; margin-right:14px; font-size:12px; color:var(--muted); display:flex; gap:24px; white-space:nowrap; }
+.accordion-body{ display:none; padding:0 16px 18px 33px; }
+.accordion.open .accordion-body{ display:block; }
+
+.fieldgrid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px 32px; }
+@media (max-width:640px){ .fieldgrid2{ grid-template-columns:1fr; } }
+.fieldgrid2 .field label{ text-transform:none; letter-spacing:0; font-size:12px; }
+.fieldgrid2 .field input, .fieldgrid2 .field textarea{
+  width:100%; font-size:13.5px; padding:10px 12px; border:1.5px solid var(--border); border-radius:var(--r-sm);
+  background:var(--surface-2); font-family:inherit; color:var(--ink);
+}
+.fieldgrid2 .field textarea{ resize:vertical; min-height:70px; }
+
+.paymentcard{ border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); margin-bottom:14px; overflow:hidden; }
+.paymentcard-head{ display:flex; align-items:center; gap:12px; padding:13px 16px; cursor:pointer; }
+.paymentcard-head .bar{ width:3px; align-self:stretch; background:var(--active-red); border-radius:2px; flex:none; min-height:18px; }
+.paymentcard-head .ptitle{ color:var(--info); font-weight:700; font-size:13.5px; text-decoration:underline; flex:1; }
+.paymentcard-head .chev{ width:14px;height:14px; color:var(--faint); transition:transform .18s ease; }
+.paymentcard.open .paymentcard-head .chev{ transform:rotate(180deg); }
+.paymentcard-body{ display:none; padding:4px 20px 20px 33px; }
+.paymentcard.open .paymentcard-body{ display:block; }
+.btn-copy{ background:var(--active-red); color:#fff; border:none; padding:7px 14px; border-radius:7px; font-weight:700; font-size:12px; cursor:pointer; }
+.btn-copy:hover{ opacity:0.9; }
+
+.emptystate-mini{ padding:26px 16px; text-align:center; color:var(--faint); font-size:12.8px; }
+.agebadge{background:var(--warn-tint); color:var(--warn); font-size:10.3px; font-weight:800; padding:2px 7px; border-radius:5px; display:inline-block; margin-bottom:3px;}
+.rptag{background:var(--brand); color:#fff; font-size:9.5px; font-weight:800; padding:2px 6px; border-radius:5px; display:inline-block; margin-top:6px;}
+
+/* ============ IAM / EXPORT-IMPORT ============ */
+.iam-results{ margin-top:22px; }
+.iam-results h3{ font-size:13.5px; font-weight:700; margin-bottom:12px; }
+.iam-row{
+  display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border:1px solid var(--border);
+  border-radius:var(--r-md); margin-bottom:8px; background:var(--surface-2);
+}
+.iam-row .time{ font-family:var(--mono); font-weight:700; font-size:13px; }
+.btn-export{
+  background:var(--info); color:#fff; border:none; padding:9px 20px; border-radius:var(--r-sm); font-weight:700;
+  font-size:12.5px; cursor:pointer;
+}
+.btn-export:hover{ background:#2359C9; }
+
+.dropzone{
+  border:2px dashed var(--border); border-radius:var(--r-lg); padding:34px 20px; text-align:center; color:var(--muted);
+  background:var(--surface-2); cursor:pointer;
+}
+.dropzone:hover{ border-color:var(--info); color:var(--info); }
+.dropzone svg{ width:26px;height:26px; margin-bottom:10px; }
+.dropzone .dz-title{ font-weight:700; font-size:13px; color:var(--ink); margin-bottom:4px; }
+.dropzone .dz-sub{ font-size:12px; }
+
+/* ============ PLACEHOLDER PAGES ============ */
+.placeholder-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-1);
+  padding:60px 30px; text-align:center; max-width:480px; margin:40px auto;
+}
+.placeholder-card .icon{
+  width:56px;height:56px; border-radius:16px; margin:0 auto 18px; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg, var(--grad-1), var(--grad-2)); color:#fff;
+}
+.placeholder-card .icon svg{ width:26px;height:26px; }
+.placeholder-card h2{ font-size:17px; margin-bottom:8px; }
+.placeholder-card p{ font-size:13px; color:var(--muted); line-height:1.6; }
+.placeholder-card .eta{
+  display:inline-block; margin-top:16px; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+  background:var(--warn-tint); color:var(--warn); padding:5px 12px; border-radius:999px;
+}
+
+footer.pagefoot{ padding:20px 26px 40px; font-size:11px; color:var(--faint); font-family:var(--mono); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ================= SIDEBAR ================= -->
+  <nav class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="sidebar-head">
+      <div class="brandmark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 16c3-8 7-11 10-11s6 2 6 5-3 5-6 5-6-2-9 1z" fill="#fff"/></svg></div>
+      <div class="brand-wordmark"><div class="l1">TAS</div><div class="l2">TEST ADMIN SYSTEM</div></div>
+      <button class="collapse-btn" id="collapseBtn" aria-label="Collapse menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg></button>
+    </div>
+
+    <div class="sidebar-scroll">
+
+      <button class="navicon active" data-page="home"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span class="navlabel">Home</span><span class="tip">Home</span></button>
+
+      <button class="navicon" data-page="testcentres"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg><span class="navlabel">Test centres</span><span class="tip">Test centres</span></button>
+
+      <button class="navicon" data-page="quicksight"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 6h7v7"/></svg><span class="navlabel">QuickSight</span><span class="tip">QuickSight</span></button>
+
+      <div class="navgroup open" id="sessGroup">
+        <button class="navicon" id="sessGroupToggle">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          <span class="navlabel">Session Management</span>
+          <svg class="expand-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M9 6l6 6-6 6"/></svg>
+          <span class="tip">Session Management</span>
+        </button>
+        <div class="subnav">
+          <button class="navicon" data-page="sessions"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4" stroke="none"/><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M9 14l2 2 4-4"/></svg><span class="navlabel">Session Calendar</span></button>
+          <button class="navicon" data-page="testmaterials"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M8 14l2 2 4-4"/></svg><span class="navlabel">Test Materials Exports</span></button>
+          <button class="navicon" data-page="iam"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M9 14l2 2 4-4"/></svg><span class="navlabel">IAM</span></button>
+        </div>
+      </div>
+
+      <button class="navicon" data-page="profile"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span class="navlabel">Profile Management</span><span class="tip">Profile Management</span></button>
+
+      <button class="navicon" data-page="referral"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><span class="navlabel">Referral Partners</span><span class="tip">Referral Partners</span></button>
+
+      <button class="navicon" data-page="applications"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg><span class="navlabel">Applications</span><span class="navbadge">142</span><span class="tip">Applications</span></button>
+
+      <button class="navicon" data-page="vouchers"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4V9z"/><path d="M9 7v10" stroke-dasharray="2 2"/></svg><span class="navlabel">Voucher Code Management</span><span class="navbadge">17</span><span class="tip">Voucher Code Management</span></button>
+
+      <button class="navicon" data-page="results"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="navlabel">Result Management</span><span class="navbadge">1.2k</span><span class="tip">Result Management</span></button>
+
+    </div>
+
+    <!--<div class="sidebar-profile">
+      <div class="avatar">TG</div>
+      <div class="sidebar-profile-text">
+        <div class="name">Thiyagu Govindaraj</div>
+        <div class="role">Technical Lead</div>
+      </div>
+    </div>-->
+  </nav>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+
+    <div class="topbar">
+      <div class="topbar-title">
+        <h1 id="page-title">Test centres</h1>
+        <div class="crumb" id="page-crumb">OPERATIONS CONSOLE</div>
+      </div>
+      <div class="topbar-right">
+        <!--<div class="globalsearch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" placeholder="Search test centres, candidates, vouchers…">
+        </div>-->
+        <button class="iconbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dot"></span></button>
+        <div class="usermenu-wrap">
+          <div class="usermenu" id="userMenuTrigger">
+            <div class="avatar">TG</div>
+            <span class="email">thiyagu.govindaraj@idp.com</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="usermenu-panel" id="userMenuPanel">
+            <div class="who"><strong>Thiyagu Govindaraj</strong>thiyagu.govindaraj@idp.com</div>
+            <button class="signout-btn" id="signOutBtn">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ============================================================ -->
+      <!-- HOME -->
+      <!-- ============================================================ -->
+      <section class="page active" id="page-home">
+        <div class="statgrid">
+          <div class="statcard">
+            <div class="icon" style="background:var(--info-tint); color:var(--info);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div>
+            <div class="num">234</div><div class="lbl">Test centres</div>
+            <div class="delta" style="color:var(--success);">▲ 6 new this quarter</div>
+            <div class="miniprog"><span style="width:82%; background:var(--info);"></span></div>
+          </div>
+          <div class="statcard">
+            <div class="icon" style="background:var(--purple-tint); color:var(--purple);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></div>
+            <div class="num">312</div><div class="lbl">Sessions this week</div>
+            <div class="delta" style="color:var(--muted);">Aug 16 – Aug 22</div>
+            <div class="miniprog"><span style="width:64%; background:var(--purple);"></span></div>
+          </div>
+          <div class="statcard">
+            <div class="icon" style="background:var(--warn-tint); color:var(--warn);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+            <div class="num">37,388</div><div class="lbl">Applications on file</div>
+            <div class="delta" style="color:var(--warn);">142 pending verification</div>
+            <div class="miniprog"><span style="width:96%; background:var(--warn);"></span></div>
+          </div>
+          <div class="statcard">
+            <div class="icon" style="background:var(--danger-tint); color:var(--danger);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg></div>
+            <div class="num">1,204</div><div class="lbl">Unconfirmed results</div>
+            <div class="delta" style="color:var(--danger);">▲ 8% vs last week</div>
+            <div class="miniprog"><span style="width:38%; background:var(--danger);"></span></div>
+          </div>
+          <div class="statcard">
+            <div class="icon" style="background:var(--success-tint); color:var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4V9z"/></svg></div>
+            <div class="num">17</div><div class="lbl">Active vouchers</div>
+            <div class="delta" style="color:var(--success);">6.8% avg discount</div>
+            <div class="miniprog"><span style="width:55%; background:var(--success);"></span></div>
+          </div>
+        </div>
+
+        <h2 style="font-size:15px; margin-bottom:12px;">Jump to a module</h2>
+        <div class="hubgrid">
+          <div class="hubcard" data-goto="testcentres">
+            <div class="icon" style="background:var(--info-tint); color:var(--info);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div>
+            <h3>Test Centres</h3>
+            <p>Manage test centre entities, their physical locations, and in-centre product fees.</p>
+          </div>
+          <div class="hubcard" data-goto="sessions">
+            <div class="icon" style="background:var(--purple-tint); color:var(--purple);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></div>
+            <h3>Session Management</h3>
+            <p>Create, publish and manage LRW and Speaking session slots on the scheduling calendar.</p>
+          </div>
+          <div class="hubcard" data-goto="vouchers">
+            <div class="icon" style="background:var(--success-tint); color:var(--success);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4V9z"/></svg></div>
+            <h3>Voucher Management</h3>
+            <p>Set up discount campaigns and track usage limits across test centres.</p>
+          </div>
+          <div class="hubcard" data-goto="results">
+            <div class="icon" style="background:var(--danger-tint); color:var(--danger);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg></div>
+            <h3>Result Management</h3>
+            <p>Review candidate results, TRF and eTRF status, and EOR outcomes.</p>
+          </div>
+          <div class="hubcard" data-goto="applications">
+            <div class="icon" style="background:var(--warn-tint); color:var(--warn);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+            <h3>Application Management</h3>
+            <p>Search and manage candidate applications, payments, verification and transfers.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- TEST CENTRES (3 sub-tabs) -->
+      <!-- ============================================================ -->
+      <section class="page" id="page-testcentres">
+        <div class="tabscope">
+        <div class="tabrow">
+          <button class="tabbtn active" data-subtab="tc-list">Test Centres List</button>
+          <button class="tabbtn" data-subtab="tc-locations">Locations List</button>
+          <button class="tabbtn" data-subtab="tc-fees">IOC Fee List</button>
+        </div>
+
+        <!-- SUBTAB: Test Centres List -->
+        <div class="subtab active" id="tc-list">
+          <div class="filtercard">
+            <div class="filtergrid cols-4">
+              <div class="field"><label>Test centre</label>
+                <div class="selectlike"><svg class="leading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/></svg><span class="ph">Search by name or IDP code</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+              <div class="field"><label>Region</label>
+                <div class="selectlike"><span class="ph">All regions</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+              <div class="field"><label>Country</label>
+                <div class="selectlike"><span class="ph">All countries</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+              <div class="field"><label>Ownership</label>
+                <div class="selectlike"><span class="ph">All ownership types</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+            </div>
+            <div class="filtergrid" style="grid-template-columns:1fr; margin-top:12px; max-width:23%;">
+              <div class="field"><label>Status</label>
+                <div class="selectlike"><span class="ph">Any status</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+            </div>
+            <div class="filter-actions">
+              <button class="btn btn-ghost">Clear</button>
+              <button class="btn btn-primary">Search</button>
+            </div>
+          </div>
+
+          <div class="resultsbar">
+            <div class="count">Total records: <strong>234</strong></div>
+            <div class="pagesize">10 / page <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+          </div>
+
+          <div class="tablecard">
+            <table class="datatable">
+              <thead><tr>
+                <th class="sortable">IDP Code ⇅</th><th class="sortable">Test Centre Name ⇅</th><th>Region</th><th>Country</th><th>City</th>
+                <th>Ownership</th><th class="sortable">Status ⇅</th><th>Locations</th><th>Products</th>
+              </tr></thead>
+              <tbody id="tc-list-body"></tbody>
+            </table>
+            <div class="pagination" id="tc-list-pagination"></div>
+          </div>
+        </div>
+
+        <!-- SUBTAB: Locations List -->
+        <div class="subtab" id="tc-locations">
+          <div class="filtercard">
+            <div class="filtergrid cols-4">
+              <div class="field"><label>Test centre</label>
+                <div class="tagfield"><svg class="leading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
+                  <span class="tag">AE234 – IDP Education Abu Dhabi <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+                  <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+              </div>
+              <div class="field"><label>Test location</label>
+                <div class="tagfield">
+                  <span class="tag">IDP IELTS Abu Dhabi – Al Manhal (Inactive) <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+                  <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+              </div>
+              <div class="field"><label>Status</label>
+                <div class="dropdownwrap">
+                  <div class="tagfield" id="statusFilterTrigger" style="cursor:pointer;">
+                    <span class="tag">Approved <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+                  </div>
+                  <div class="dropdown-panel" id="statusFilterPanel">
+                    <div class="dropdown-option selected"><span class="radio"></span>Approved</div>
+                    <div class="dropdown-option"><span class="radio"></span>New</div>
+                    <div class="dropdown-option"><span class="radio"></span>Pending</div>
+                    <div class="dropdown-option"><span class="radio"></span>Pre-Approved</div>
+                    <div class="dropdown-option"><span class="radio"></span>Rejected</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="filter-actions">
+              <button class="btn btn-ghost">Clear</button>
+              <button class="btn btn-primary">Search</button>
+            </div>
+          </div>
+
+          <div class="resultsbar">
+            <div class="count">Total records: <strong>1</strong></div>
+            <div class="pagesize">10 / page <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+          </div>
+
+          <div class="tablecard">
+            <table class="datatable">
+              <thead><tr><th>IDP Code</th><th>Test Location Name</th><th>Test Centre Name</th><th>City</th><th>State</th><th>Num. of products</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="cell-link cell-mono">AE234</td>
+                  <td class="cell-link">IDP IELTS Abu Dhabi – Al Manhal (Inactive)</td>
+                  <td>IDP Education Abu Dhabi</td>
+                  <td>Abu Dhabi</td>
+                  <td>Abū Zaby [Abu Dhabi]</td>
+                  <td>4</td>
+                  <td><span class="badge warn"><span class="badge-dot"></span>Approved</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pagination"><button class="pagebtn" disabled>«</button><button class="pagebtn" disabled>‹</button><button class="pagebtn active">1</button><button class="pagebtn" disabled>›</button><button class="pagebtn" disabled>»</button></div>
+          </div>
+        </div>
+
+        <!-- SUBTAB: IOC Fee List -->
+        <div class="subtab" id="tc-fees">
+          <div class="filtercard">
+            <div class="filtergrid cols-4">
+              <div class="field"><label>Test centre <span style="color:var(--danger)">*</span></label>
+                <div class="selectlike"><span>AE234 – IDP Education Abu Dhabi</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+              <div class="field"><label>Test location <span style="color:var(--danger)">*</span></label>
+                <div class="selectlike"><span>IDP IELTS Abu Dhabi</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+              <div class="field"><label>Product name <span style="color:var(--danger)">*</span></label>
+                <div class="selectlike"><span>IELTS on Computer Academic</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+              <div class="field"><label>&nbsp;</label>
+                <div class="togglefield"><label>Inactive records</label><div class="toggle on" id="inactiveToggle"></div></div>
+              </div>
+            </div>
+            <div class="filter-actions">
+              <button class="btn btn-primary">Search</button>
+            </div>
+          </div>
+
+          <div class="tablecard">
+            <table class="datatable">
+              <thead><tr>
+                <th>Product Name</th><th>Test Location</th><th>Status</th><th>Start Date</th><th>Currency</th>
+                <th>Total Test Amount</th><th>Total EOR Amount</th><th>Test Fee Charge(s)</th><th>EOR Fee Charge(s)</th><th></th>
+              </tr></thead>
+              <tbody id="tc-fees-body"></tbody>
+            </table>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- SESSION MANAGEMENT -->
+      <!-- ============================================================ -->
+      <!-- ============================================================ -->
+      <!-- IAM EXPORT / IMPORT -->
+      <!-- ============================================================ -->
+      <section class="page" id="page-iam">
+        <div class="tabscope">
+        <div class="tabrow">
+          <button class="tabbtn active" data-subtab="iam-export">IAM Export</button>
+          <button class="tabbtn" data-subtab="iam-import">IAM Import</button>
+        </div>
+
+        <!-- SUBTAB: IAM Export -->
+        <div class="subtab active" id="iam-export">
+          <div class="filtercard">
+            <div class="filtergrid cols-2">
+              <div class="field"><label>Test Centre</label>
+                <div class="selectlike"><span>AE109 – University of Wollongong Dubai</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+              <div class="field"><label>Test Location</label>
+                <div class="selectlike"><span>Cosmos Immigration Abu Dhabi – University of Wollongong in Dubai</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+            </div>
+            <div class="filtergrid" style="grid-template-columns:1fr 1fr 1fr; margin-top:12px;">
+              <div class="field"><label>Test Type</label><input class="textlike" type="text" value="IELTS_UKVI"></div>
+              <div class="field"><label>Test Date</label>
+                <div class="selectlike"><svg class="leading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>22/08/2026</span></div>
+              </div>
+              <div class="field"><label>Export Type</label>
+                <div class="selectlike"><span>LRW</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+            </div>
+            <div class="filter-actions" style="justify-content:flex-start;">
+              <button class="btn" style="background:var(--info); color:#fff;">Search</button>
+            </div>
+          </div>
+
+          <div class="iam-results">
+            <h3>Session Time</h3>
+            <div class="iam-row"><span class="time">09:00 AM</span><button class="btn-export">Export</button></div>
+            <div class="iam-row"><span class="time">All</span><button class="btn-export">Export</button></div>
+          </div>
+        </div>
+
+        <!-- SUBTAB: IAM Import -->
+        <div class="subtab" id="iam-import">
+          <div class="filtercard">
+            <div class="filtergrid cols-2">
+              <div class="field"><label>Test Centre</label>
+                <div class="selectlike"><span>AE109 – University of Wollongong Dubai</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+              <div class="field"><label>Test Location</label>
+                <div class="selectlike"><span>Cosmos Immigration Abu Dhabi – University of Wollongong in Dubai</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+            </div>
+            <div class="filtergrid" style="grid-template-columns:1fr 1fr; margin-top:12px;">
+              <div class="field"><label>Test Type</label><input class="textlike" type="text" value="IELTS_UKVI"></div>
+              <div class="field"><label>Import Type</label>
+                <div class="selectlike"><span>LRW Results</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+            </div>
+            <div class="field" style="margin-top:16px; max-width:480px;">
+              <label>Upload file</label>
+              <div class="dropzone">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                <div class="dz-title">Drop a file here or click to browse</div>
+                <div class="dz-sub">Accepts .csv or .xml result import files</div>
+              </div>
+            </div>
+            <div class="filter-actions" style="justify-content:flex-start;">
+              <button class="btn" style="background:var(--info); color:#fff;">Import</button>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- TEST MATERIALS EXPORTS -->
+      <!-- ============================================================ -->
+      <section class="page" id="page-testmaterials">
+        <div class="filtercard">
+          <div class="filtergrid cols-4">
+            <div class="field"><label>Test Centre</label>
+              <div class="selectlike"><span class="ph">Select test centre</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+            </div>
+            <div class="field"><label>Test Location</label>
+              <div class="selectlike"><span class="ph">Select test location</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+            </div>
+            <div class="field"><label>Date range</label>
+              <div class="selectlike"><svg class="leading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="ph">Select a date range</span></div>
+            </div>
+            <div class="field"><label>Material type</label>
+              <div class="selectlike"><span>Question papers</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+            </div>
+          </div>
+          <div class="filter-actions">
+            <button class="btn" style="background:var(--info); color:#fff;">Generate export</button>
+          </div>
+        </div>
+        <div class="emptystate">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          <div class="title">No exports generated yet</div>
+          <div>Choose a test centre, location and date range above, then generate an export.</div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- QUICKSIGHT / PROFILE / REFERRAL PLACEHOLDERS -->
+      <!-- ============================================================ -->
+      <section class="page" id="page-quicksight">
+        <div class="placeholder-card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 6h7v7"/></svg></div>
+          <h2>QuickSight analytics</h2>
+          <p>Embedded QuickSight dashboards for test-centre performance, capacity and revenue reporting will appear here.</p>
+          <span class="eta">Embed pending IT approval</span>
+        </div>
+      </section>
+
+      <section class="page" id="page-profile">
+        <div class="placeholder-card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+          <h2>Profile management</h2>
+          <p>Manage staff roles, permissions and console access for your test centre team from this module.</p>
+          <span class="eta">Coming soon</span>
+        </div>
+      </section>
+
+      <section class="page" id="page-referral">
+        <div class="tabscope">
+          <div class="tabrow">
+            <button class="tabbtn active" data-subtab="rp-partners">Partners</button>
+            <button class="tabbtn" data-subtab="rp-applicants">Applicants</button>
+            <button class="tabbtn" data-subtab="rp-commission-mgmt">Commission Management</button>
+            <button class="tabbtn" data-subtab="rp-commission-structure">Commission Structure</button>
+            <button class="tabbtn" data-subtab="rp-commission-payout">Commission Payout</button>
+          </div>
+
+          <!-- ===== PARTNERS ===== -->
+          <div class="subtab active" id="rp-partners">
+            <div class="filtercard">
+              <div class="rp-section-title">Partners</div>
+              <div class="filtergrid cols-4">
+                <div class="field"><input class="textlike" type="text" placeholder="Enter Partner Name"></div>
+                <div class="field"><div class="selectlike"><span class="ph">Select Country</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+                <div class="field"><div class="selectlike"><span class="ph">Select Status</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+                <div class="field" style="flex-direction:row; gap:10px; align-items:stretch;">
+                  <button class="btn btn-dark" style="flex:1;">Clear</button>
+                  <button class="btn" style="flex:1; background:var(--active-red); color:#fff;">Search</button>
+                </div>
+              </div>
+            </div>
+            <div class="emptystate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <div class="title">No Records Found</div>
+            </div>
+          </div>
+
+          <!-- ===== APPLICANTS ===== -->
+          <div class="subtab" id="rp-applicants">
+            <div class="filtercard">
+              <div class="rp-section-title">Applicants</div>
+              <div class="filtergrid cols-4">
+                <div class="field"><input class="textlike" type="text" placeholder="Enter Applicant Name"></div>
+                <div class="field"><div class="selectlike"><span class="ph">Select Country</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+                <div class="field"><div class="selectlike"><span class="ph">Select Status</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+                <div class="field" style="flex-direction:row; gap:10px; align-items:stretch;">
+                  <button class="btn btn-dark" style="flex:1;">Clear</button>
+                  <button class="btn" style="flex:1; background:var(--active-red); color:#fff;">Search</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="resultsbar">
+              <div class="count">Total records: <strong>149</strong></div>
+              <div class="pagesize">10 / page <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+            </div>
+
+            <div class="approw-grid" style="grid-template-columns:2fr 1.2fr 1fr 1.2fr auto; padding:10px 18px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md); margin-bottom:10px; font-size:10.8px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:0.03em;">
+              <div>Referral Partner Name</div><div>Country</div><div>Status</div><div>Application Received Date</div><div></div>
+            </div>
+            <div id="rp-applicants-list"></div>
+          </div>
+
+          <!-- ===== COMMISSION MANAGEMENT ===== -->
+          <div class="subtab" id="rp-commission-mgmt">
+            <div class="tabscope">
+              <div class="tabrow nested">
+                <button class="tabbtn active" data-subtab="rp-cm-country">Country Level</button>
+                <button class="tabbtn" data-subtab="rp-cm-account">Account Level</button>
+              </div>
+
+              <div class="subtab active" id="rp-cm-country">
+                <div class="rp-section-title">Commission Management</div>
+                <div class="filtercard">
+                  <div style="display:flex; gap:12px; align-items:flex-start;">
+                    <div class="dropdownwrap" style="flex:1;">
+                      <div class="tagfield" id="cmCountryTrigger" style="cursor:pointer; justify-content:space-between;">
+                        <span class="tag">Australia</span>
+                        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+                      </div>
+                      <div class="dropdown-panel checkdrop-panel" id="cmCountryPanel">
+                        <div class="checkdrop-search"><div class="textlike"><svg class="leading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Search" style="border:none; outline:none; background:none; width:100%;"></div></div>
+                        <div class="checkdrop-list">
+                          <div class="checkdrop-option"><span class="cb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></span>Argentina</div>
+                          <div class="checkdrop-option"><span class="cb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></span>Armenia</div>
+                          <div class="checkdrop-option checked"><span class="cb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></span>Australia</div>
+                          <div class="checkdrop-option"><span class="cb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></span>Austria</div>
+                          <div class="checkdrop-option"><span class="cb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></span>Azerbaijan</div>
+                        </div>
+                      </div>
+                    </div>
+                    <button class="btn" style="background:var(--active-red); color:#fff; height:44px;">Search</button>
+                  </div>
+                </div>
+
+                <div class="filtercard">
+                  <div style="font-weight:700; font-size:13.5px; margin-bottom:14px;">Tier Configuration</div>
+                  <table class="tier-table">
+                    <thead><tr>
+                      <th>Tier Name</th>
+                      <th>Start Range (Min) <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></th>
+                      <th>End Range (Max) <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></th>
+                      <th>Commission in Percentage <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></th>
+                    </tr></thead>
+                    <tbody>
+                      <tr><td class="tiername">Bronze</td><td><input type="text" value="1"></td><td><input type="text" value="10"></td><td><input type="text" value="10.0"></td></tr>
+                      <tr><td class="tiername">Silver</td><td><input type="text" value="11"></td><td><input type="text" value="20"></td><td><input type="text" value="12.5"></td></tr>
+                      <tr><td class="tiername">Gold</td><td><input type="text" value="21"></td><td><input type="text" value="50"></td><td><input type="text" value="15.0"></td></tr>
+                    </tbody>
+                  </table>
+                  <div class="filter-actions">
+                    <button class="btn btn-ghost">+ Add tier</button>
+                    <button class="btn" style="background:var(--active-red); color:#fff;">Save changes</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="subtab" id="rp-cm-account">
+                <div class="rp-section-title">Commission Management</div>
+                <div class="filtercard">
+                  <div style="display:flex; gap:12px; align-items:flex-start;">
+                    <div class="field" style="flex:1;"><div class="selectlike"><span>Al Bayan International Institute</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+                    <button class="btn" style="background:var(--active-red); color:#fff; height:44px;">Search</button>
+                  </div>
+                </div>
+                <div class="filtercard">
+                  <div style="font-weight:700; font-size:13.5px; margin-bottom:14px;">Tier Configuration</div>
+                  <table class="tier-table">
+                    <thead><tr>
+                      <th>Tier Name</th><th>Start Range (Min)</th><th>End Range (Max)</th><th>Commission in Percentage</th>
+                    </tr></thead>
+                    <tbody>
+                      <tr><td class="tiername">Bronze</td><td><input type="text" value="1"></td><td><input type="text" value="49"></td><td><input type="text" value="60.0"></td></tr>
+                    </tbody>
+                  </table>
+                  <div class="filter-actions">
+                    <button class="btn btn-ghost">+ Add tier</button>
+                    <button class="btn" style="background:var(--active-red); color:#fff;">Save changes</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== COMMISSION STRUCTURE ===== -->
+          <div class="subtab" id="rp-commission-structure">
+            <div class="tabscope">
+              <div class="tabrow nested">
+                <button class="tabbtn active" data-subtab="rp-cs-country">Country</button>
+                <button class="tabbtn" data-subtab="rp-cs-search">Search</button>
+              </div>
+
+              <div class="subtab active" id="rp-cs-country">
+                <div class="rp-section-title">Commission Structure</div>
+                <div class="filtercard">
+                  <div style="display:flex; gap:12px; align-items:stretch;">
+                    <div class="field" style="flex:1;"><div class="selectlike"><span>Australia</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+                    <button class="btn" style="background:var(--active-red); color:#fff;">Search</button>
+                  </div>
+                </div>
+
+                <p style="font-weight:700; font-size:13px; margin-bottom:10px;">Hierarchy for Selecting the Commission Structure</p>
+                <ul class="hierarchy-list">
+                  <li>If an RP has a commission structure configured for a specific Test Centre (TC), the Test Centre Commission Structure will be applied.</li>
+                  <li>If no Test Centre Commission Structure is defined, the system will check for an Account-level Commission Structure and apply it if available.</li>
+                  <li>If neither a Test Centre nor an Account-level Commission Structure is configured, the Country-level Commission Structure will be used.</li>
+                </ul>
+
+                <div class="filtercard">
+                  <div style="font-weight:700; font-size:13px; margin-bottom:14px;">Commission Type : Percentage</div>
+                  <div style="border-top:1px solid var(--border); padding-top:14px;">
+                    <div style="font-weight:700; font-size:12.5px; color:var(--muted); margin-bottom:10px;">Tier Configuration</div>
+                    <table class="tier-table">
+                      <thead><tr><th>Tier Name</th><th>Start Range (Min)</th><th>End Range (Max)</th><th>Commission in Percentage</th></tr></thead>
+                      <tbody>
+                        <tr><td class="tiername">Bronze</td><td><input class="readonly" type="text" value="1" readonly></td><td><input class="readonly" type="text" value="10" readonly></td><td><input class="readonly" type="text" value="10" readonly></td></tr>
+                        <tr><td class="tiername">Silver</td><td><input class="readonly" type="text" value="11" readonly></td><td><input class="readonly" type="text" value="20" readonly></td><td><input class="readonly" type="text" value="10" readonly></td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="subtab" id="rp-cs-search">
+                <div class="rp-section-title">Commission Structure</div>
+                <div class="filtercard">
+                  <div class="filtergrid cols-2">
+                    <div class="field"><label>Test Centre</label><div class="selectlike"><span class="ph">Select test centre</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+                    <div class="field"><label>Partner Name</label><div class="selectlike"><span class="ph">Select partner</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+                  </div>
+                  <div class="filter-actions">
+                    <button class="btn" style="background:var(--active-red); color:#fff;">Search</button>
+                  </div>
+                </div>
+                <div class="rp-note">Select a test centre and partner above to look up the exact commission structure that applies to them.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== COMMISSION PAYOUT ===== -->
+          <div class="subtab" id="rp-commission-payout">
+            <div class="rp-section-title">Commission Details</div>
+            <div class="filtercard">
+              <div class="filtergrid cols-4">
+                <div class="field"><label>Test Centre<span style="color:var(--danger)">*</span></label><div class="selectlike"><span>AE234 – IDP Education Abu Dhabi</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+                <div class="field"><label>Partner Name<span style="color:var(--danger)">*</span></label><div class="selectlike"><span>Al Bayan International Institute</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+                <div class="field"><label>Report Date<span style="color:var(--danger)">*</span></label>
+                  <div class="dropdownwrap">
+                    <div class="tagfield" id="payoutDateTrigger" style="cursor:pointer;"><span id="payoutDateLabel" class="ph">Select Month &amp; Year</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+                    <div class="dropdown-panel monthyear-panel" id="payoutDatePanel">
+                      <div class="monthyear-head">
+                        <button class="monthyear-nav" id="myPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M15 6l-6 6 6 6"/></svg></button>
+                        <span id="myYear">2026</span>
+                        <button class="monthyear-nav" id="myNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M9 6l6 6-6 6"/></svg></button>
+                      </div>
+                      <div class="monthyear-list">
+                        <div class="monthyear-option" data-month="June"><span class="cb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></span>June</div>
+                        <div class="monthyear-option" data-month="July"><span class="cb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></span>July</div>
+                        <div class="monthyear-option disabled">August</div>
+                        <div class="monthyear-option disabled">September</div>
+                        <div class="monthyear-option disabled">October</div>
+                        <div class="monthyear-option disabled">November</div>
+                        <div class="monthyear-option disabled">December</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field" style="flex-direction:row; gap:10px; align-items:stretch;">
+                  <button class="btn btn-dark" style="flex:1;" id="payoutClear">Clear</button>
+                  <button class="btn" style="flex:1; background:var(--active-red); color:#fff;" id="payoutSearch">Search</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="payoutPrompt" class="rp-note">Please select mandatory fields to view details</div>
+
+            <div id="payoutResults" class="hidden">
+              <div class="resultsbar">
+                <div class="count">Total records: <strong>1</strong></div>
+                <div class="pagesize">10 / page <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+              <div id="payoutList"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+
+      <section class="page" id="page-sessions">
+        <div class="sess-toolbar">
+          <div class="selectlike" style="min-width:220px;"><span>101IH – IELTS At Home IDP</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="selectlike" style="min-width:190px;"><span>IELTS At Home IDP</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="selectlike" style="min-width:170px;"><span class="ph">Select a product</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+          <button class="btn btn-danger-soft"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>Link Sessions</button>
+          <div class="spacer"></div>
+          <button class="btn btn-primary">Create Sessions <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button>
+          <button class="btn btn-primary">Publish <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button>
+          <button class="btn btn-primary">Edit <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button>
+          <button class="btn btn-primary">Delete <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
+
+        <div class="sess-nav">
+          <div class="sess-nav-left">
+            <button class="btn btn-ghost btn-sm">Previous</button>
+            <button class="btn btn-ghost btn-sm">Today</button>
+            <button class="btn btn-ghost btn-sm">Next</button>
+          </div>
+          <div class="sess-daterange">Aug 16 – Aug 22, 2026</div>
+          <div class="sess-view-toggle">
+            <button class="btn-sm">Month</button><button class="active">Week</button><button class="btn-sm">Day</button>
+          </div>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#B8863B;"></span>LRW Draft</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#12805C;"></span>LRW Published</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#8B93A3;"></span>Speaking Draft</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#6C4FD1;"></span>Speaking Published</div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--faint); opacity:0.55;"></span>Booked Session</div>
+          <div class="togglefield" style="margin-left:auto;"><label>24 hr</label><div class="toggle"></div></div>
+        </div>
+
+        <div class="calgrid-wrap">
+          <div class="calgrid" id="calgrid"></div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- VOUCHER MANAGEMENT -->
+      <!-- ============================================================ -->
+      <section class="page" id="page-vouchers">
+        <div class="filtercard">
+          <div class="filtergrid cols-4">
+            <div class="field"><label>Test centre</label>
+              <div class="tagfield"><svg class="leading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
+                <span class="tag">AE234 – IDP Education Abu Dhabi <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+              </div>
+            </div>
+            <div class="field"><label>Test location</label>
+              <div class="tagfield"><svg class="leading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/></svg>
+                <span class="tag">IDP IELTS Abu Dhabi <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+              </div>
+            </div>
+            <div class="field"><label>Product</label>
+              <div class="tagfield"><svg class="leading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7L9 18l-5-5" stroke="none"/><rect x="3" y="7" width="18" height="13" rx="2"/></svg>
+                <span class="tag">IELTS on Computer Academic <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+              </div>
+            </div>
+          </div>
+          <div class="moreFiltersToggle" id="voucherMoreToggle">More filters <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="morefilters-panel" id="voucherMorePanel">
+            <div class="filtergrid cols-4">
+              <div class="field"><label>Voucher type</label><div class="selectlike"><span class="ph">Any type</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Status</label><div class="selectlike"><span class="ph">Any status</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Valid on</label><input class="textlike" type="text" placeholder="DD/MM/YYYY"></div>
+              <div class="field"><label>Campaign name</label><input class="textlike" type="text" placeholder="Search campaign"></div>
+            </div>
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-ghost">Clear</button>
+            <button class="btn btn-primary">Search</button>
+          </div>
+        </div>
+
+        <div class="resultsbar">
+          <div class="count">Total records: <strong>17</strong></div>
+          <div class="pagesize">10 / page <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+
+        <div class="tablecard">
+          <table class="datatable">
+            <thead><tr><th>Campaign Name</th><th>Voucher Type</th><th>Discount (%)</th><th>Start Date</th><th>Expiry Date</th><th>IDP Code</th><th>Status</th><th></th></tr></thead>
+            <tbody id="voucher-body"></tbody>
+          </table>
+          <div class="pagination"><button class="pagebtn" disabled>«</button><button class="pagebtn" disabled>‹</button><button class="pagebtn active">1</button><button class="pagebtn">2</button><button class="pagebtn">›</button><button class="pagebtn">»</button></div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- RESULT MANAGEMENT -->
+      <!-- ============================================================ -->
+      <section class="page" id="page-results">
+        <div class="filtercard">
+          <div class="filtergrid cols-2">
+            <div class="field"><label>Test centres</label>
+              <div class="tagfield">
+                <span class="tag">101IH – IELTS At Home IDP <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+                <span class="tag">AE104 – IDP IELTS Al Ain Computer Delivered <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+                <span class="tag overflow">+230</span>
+              </div>
+            </div>
+            <div class="field"><label>Test locations</label>
+              <div class="tagfield">
+                <span class="tag">IELTS IDP Indonesia – Bali <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+                <span class="tag">AEO Abbottabad – English Language Companion <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+                <span class="tag overflow">+983</span>
+              </div>
+            </div>
+          </div>
+          <div class="filtergrid cols-4" style="margin-top:12px;">
+            <div class="field"><label>Date range</label><div class="selectlike"><svg class="leading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>22/08/2026 – 31/08/2026</span></div></div>
+            <div class="field"><label>First name</label><input class="textlike" type="text" placeholder="First name"></div>
+            <div class="field"><label>Last name</label><input class="textlike" type="text" placeholder="Last name"></div>
+            <div class="field"><label>Email address</label><input class="textlike" type="text" placeholder="Email address"></div>
+          </div>
+          <div class="filtergrid cols-4" style="margin-top:12px;">
+            <div class="field"><label>Candidate number</label><input class="textlike" type="text" placeholder="Candidate number"></div>
+            <div class="field"><label>Product</label><div class="selectlike"><span class="ph">Any product</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+          </div>
+
+          <div class="moreFiltersToggle" id="resultsMoreToggle">More filters <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="morefilters-panel" id="resultsMorePanel">
+            <div class="filtergrid cols-4">
+              <div class="field"><label>Result</label><div class="selectlike"><span class="ph">Any result</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>TRF status</label><div class="selectlike"><span class="ph">Any status</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>eTRF status</label><div class="selectlike"><span class="ph">Any status</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>EOR</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+            </div>
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-ghost">Clear</button>
+            <button class="btn btn-primary">Search</button>
+          </div>
+        </div>
+
+        <div class="resultsbar">
+          <div class="count">Total records: <strong>37,397</strong></div>
+          <div style="display:flex; align-items:center; gap:16px;">
+            <button class="btn btn-ghost btn-sm">Bulk action <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="pagesize">10 / page <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+          </div>
+        </div>
+
+        <div class="tablecard">
+          <table class="datatable">
+            <thead><tr>
+              <th style="width:34px;"><span class="chk"></span></th>
+              <th>Name</th><th>Product</th><th>LRW</th><th>Speaking</th><th>Result Status</th><th>TRF Status</th><th>eTRF Status</th><th>EOR Outcome</th><th></th>
+            </tr></thead>
+            <tbody id="results-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- APPLICATION MANAGEMENT -->
+      <!-- ============================================================ -->
+      <section class="page" id="page-applications">
+        <div class="filtercard">
+          <div class="filtergrid cols-2">
+            <div class="field"><label>Test centres</label>
+              <div class="tagfield">
+                <span class="tag">101IH – IELTS At Home IDP <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+                <span class="tag">AE104 – IDP IELTS Al Ain Computer Delivered <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+                <span class="tag overflow">+230</span>
+              </div>
+            </div>
+            <div class="field"><label>Test locations</label>
+              <div class="tagfield">
+                <span class="tag">IELTS IDP Indonesia – Bali <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+                <span class="tag">AEO Abbottabad – English Language Companion <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>
+                <span class="tag overflow">+983</span>
+              </div>
+            </div>
+          </div>
+          <div class="filtergrid cols-2" style="margin-top:12px;">
+            <div class="field"><label>L/R/W date-time range <span style="color:var(--danger)">*</span></label><div class="selectlike"><svg class="leading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>22/08/2026 – 12:00 AM to 31/08/2026 – 11:55 PM</span></div></div>
+            <div class="field"><label>Speaking date-time range</label><div class="selectlike"><svg class="leading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="ph">DD/MM/YYYY – HH:MM to DD/MM/YYYY – HH:MM</span></div></div>
+          </div>
+          <div class="filtergrid cols-4" style="margin-top:12px;">
+            <div class="field"><label>First name</label><input class="textlike" type="text" placeholder="First name"></div>
+            <div class="field"><label>Last name</label><input class="textlike" type="text" placeholder="Last name"></div>
+            <div class="field"><label>Email address</label><input class="textlike" type="text" placeholder="Email address"></div>
+            <div class="field"><label>Date of birth</label><input class="textlike" type="text" placeholder="Date of birth"></div>
+          </div>
+          <div class="filtergrid cols-4" style="margin-top:12px;">
+            <div class="field"><label>Candidate number</label><input class="textlike" type="text" placeholder="Candidate number"></div>
+            <div class="field"><label>ID number</label><input class="textlike" type="text" placeholder="ID number"></div>
+            <div class="field"><label>Receipt number</label><input class="textlike" type="text" placeholder="Receipt number"></div>
+            <div class="field"><label>Mobile number</label><div class="selectlike"><span>🇦🇺 +61</span><span class="ph" style="margin-left:6px;">Mobile number</span></div></div>
+          </div>
+
+          <div class="moreFiltersToggle" id="appsMoreToggle">More filters <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="morefilters-panel" id="appsMorePanel">
+            <div class="filtergrid cols-4">
+              <div class="field"><label>Payment</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Application</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Cancelled</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Transfer</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>EOR</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Verification</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Banned</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Errors</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Underage test takers</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Delivery format</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Product</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Refund</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div class="field"><label>Access arrangement</label><div class="selectlike"><span class="ph">Any</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div></div>
+            </div>
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-ghost">Clear</button>
+            <button class="btn btn-primary">Search</button>
+          </div>
+        </div>
+
+        <div class="resultsbar">
+          <div class="count">Total records: <strong>37,388</strong></div>
+          <div class="pagesize">25 / page <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+
+        <div class="tablecard">
+          <table class="datatable">
+            <thead><tr>
+              <th>Name</th><th>Number</th><th>Product</th><th>LRW</th><th>Speaking</th><th>Application</th>
+              <th>Payment</th><th>Verification</th><th>Refund</th><th>EOR</th><th>Transfer</th><th></th>
+            </tr></thead>
+            <tbody id="apps-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+
+    <footer class="pagefoot">IELTS OPERATIONS CONSOLE · REDESIGN PROTOTYPE · SAMPLE DATA SHOWN FOR LAYOUT ONLY</footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  function $(sel, ctx){ return (ctx||document).querySelector(sel); }
+  function $all(sel, ctx){ return Array.prototype.slice.call((ctx||document).querySelectorAll(sel)); }
+
+  /* ---------------- sidebar collapse toggle ---------------- */
+  var sidebarEl = $('#sidebar'), collapseBtn = $('#collapseBtn');
+  if(collapseBtn){
+    collapseBtn.addEventListener('click', function(){
+      sidebarEl.classList.toggle('collapsed');
+      collapseBtn.setAttribute('aria-label', sidebarEl.classList.contains('collapsed') ? 'Expand menu' : 'Collapse menu');
+    });
+  }
+
+  /* ---------------- sidebar navigation ---------------- */
+  var PAGE_TITLES = {
+    home:['Home','OPERATIONS CONSOLE'],
+    testcentres:['Test centres','TEST CENTRES · SETUP'],
+    quicksight:['QuickSight','ANALYTICS'],
+    sessions:['Session Calendar','SESSION MANAGEMENT'],
+    testmaterials:['Test Materials Exports','SESSION MANAGEMENT'],
+    iam:['IAM','SESSION MANAGEMENT · EXPORT / IMPORT'],
+    profile:['Profile Management','ACCOUNT'],
+    referral:['Referral Partners','PARTNERSHIPS'],
+    vouchers:['Voucher Code Management','PROMOTIONS'],
+    results:['Result Management','CANDIDATE RESULTS'],
+    applications:['Application Management','CANDIDATE APPLICATIONS']
+  };
+  var SESSION_GROUP_PAGES = ['sessions','testmaterials','iam'];
+
+  function goToPage(name){
+    $all('.page').forEach(function(p){ p.classList.remove('active'); });
+    var target = $('#page-'+name);
+    if(target) target.classList.add('active');
+    $all('.navicon[data-page]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-page') === name); });
+
+    var inSessionGroup = SESSION_GROUP_PAGES.indexOf(name) !== -1;
+    var sessToggle = $('#sessGroupToggle'), sessGroup = $('#sessGroup');
+    if(sessToggle){ sessToggle.classList.toggle('active', inSessionGroup); }
+    if(sessGroup && inSessionGroup){ sessGroup.classList.add('open'); }
+
+    var meta = PAGE_TITLES[name];
+    if(meta){ $('#page-title').textContent = meta[0]; $('#page-crumb').textContent = meta[1]; }
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  $all('.navicon[data-page]').forEach(function(btn){
+    btn.addEventListener('click', function(){ goToPage(btn.getAttribute('data-page')); });
+  });
+  $all('.hubcard[data-goto]').forEach(function(card){
+    card.addEventListener('click', function(){ goToPage(card.getAttribute('data-goto')); });
+  });
+
+  /* expand/collapse the Session Management submenu (independent of navigation) */
+  var sessGroupToggle = $('#sessGroupToggle'), sessGroup = $('#sessGroup');
+  if(sessGroupToggle && sessGroup){
+    sessGroupToggle.addEventListener('click', function(e){
+      if(!sidebarEl.classList.contains('collapsed')){
+        sessGroup.classList.toggle('open');
+      }
+    });
+  }
+
+  /* set initial active state to match default home page */
+  goToPage('home');
+
+  /* ---------------- user menu dropdown (sign out) ---------------- */
+  var userTrigger = $('#userMenuTrigger'), userPanel = $('#userMenuPanel');
+  if(userTrigger){
+    userTrigger.addEventListener('click', function(e){
+      e.stopPropagation();
+      userTrigger.classList.toggle('open');
+      userPanel.classList.toggle('open');
+    });
+    document.addEventListener('click', function(){
+      userTrigger.classList.remove('open');
+      userPanel.classList.remove('open');
+    });
+    userPanel.addEventListener('click', function(e){ e.stopPropagation(); });
+  }
+  var signOutBtn = $('#signOutBtn');
+  if(signOutBtn){
+    signOutBtn.addEventListener('click', function(){
+      signOutBtn.textContent = 'Signing out…';
+      setTimeout(function(){ signOutBtn.textContent = 'Signed out ✓'; }, 700);
+    });
+  }
+
+  /* ---------------- sub-tabs (scoped per tabscope, so nested tab groups don't interfere with each other) ---------------- */
+  function wireTabScope(scope){
+    $all('.tabbtn', scope).forEach(function(tab){
+      tab.addEventListener('click', function(){
+        var tabrow = tab.closest('.tabrow');
+        $all('.tabbtn', tabrow).forEach(function(t){ t.classList.remove('active'); });
+        tab.classList.add('active');
+        var target = tab.getAttribute('data-subtab');
+        $all('.subtab', scope).forEach(function(s){ s.classList.toggle('active', s.id === target); });
+      });
+    });
+  }
+  $all('.tabscope').forEach(wireTabScope);
+
+  /* ---------------- more filters toggles ---------------- */
+  [['voucherMoreToggle','voucherMorePanel'],['resultsMoreToggle','resultsMorePanel'],['appsMoreToggle','appsMorePanel']].forEach(function(pair){
+    var t = $('#'+pair[0]), p = $('#'+pair[1]);
+    if(!t||!p) return;
+    t.addEventListener('click', function(){
+      t.classList.toggle('open');
+      p.classList.toggle('open');
+    });
+  });
+
+  /* ---------------- status filter dropdown (Locations List) ---------------- */
+  var statusTrigger = $('#statusFilterTrigger'), statusPanel = $('#statusFilterPanel');
+  if(statusTrigger){
+    statusTrigger.addEventListener('click', function(e){
+      statusPanel.classList.toggle('open');
+      e.stopPropagation();
+    });
+    $all('.dropdown-option', statusPanel).forEach(function(opt){
+      opt.addEventListener('click', function(){
+        $all('.dropdown-option', statusPanel).forEach(function(o){ o.classList.remove('selected'); });
+        opt.classList.add('selected');
+        statusPanel.classList.remove('open');
+      });
+    });
+    document.addEventListener('click', function(){ statusPanel.classList.remove('open'); });
+  }
+
+  /* ---------------- inactive toggle (IOC Fee List) ---------------- */
+  var inactiveToggle = $('#inactiveToggle');
+  if(inactiveToggle){ inactiveToggle.addEventListener('click', function(){ inactiveToggle.classList.toggle('on'); }); }
+
+  /* ---------------- row action menus ---------------- */
+  function wireRowActions(){
+    $all('.rowaction-btn').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var menu = btn.nextElementSibling;
+        $all('.rowaction-menu.open').forEach(function(m){ if(m !== menu) m.classList.remove('open'); });
+        menu.classList.toggle('open');
+      });
+    });
+  }
+  document.addEventListener('click', function(){ $all('.rowaction-menu.open').forEach(function(m){ m.classList.remove('open'); }); });
+
+  /* ---------------- Test Centres List data ---------------- */
+  var tcRows = [
+    ['101IH','IELTS At Home IDP','AJ','AUS','Melbourne','IDP Owned','Approved',2,2],
+    ['AE104','IDP IELTS Al Ain Computer Delivered','MEEE','ARE','Al Ain','IDP Owned','Approved',9,9],
+    ['AE109','University of Wollongong Dubai','MEEE','ARE','Dubai','Other','Approved',6,6],
+    ['AE234','IDP Education Abu Dhabi','MEEE','ARE','Abu Dhabi','IDP Owned','Approved',14,14],
+    ['AE298','IDP IELTS Abu Dhabi – Al Bayan International Institute','MEEE','ARE','Abu Dhabi','IDP Owned','Approved',4,4],
+    ['AE414','IDP IELTS Sharjah (Skyline University)','MEEE','ARE','Sharjah','IDP Owned','Approved',4,4],
+    ['AE415','IDP Education Sharjah','MEEE','ARE','Sharjah','IDP Owned','Approved',4,4],
+    ['AE417','IDP Education Ltd. – CD IELTS DATSC Dubai (DISC)','MEEE','ARE','Dubai','IDP Owned','Approved',4,4],
+    ['AE419','IDP IELTS Dubai – Content Training Centre','MEEE','ARE','Dubai','IDP Owned','Approved',4,4],
+    ['AE750','IDP Education Dubai','MEEE','ARE','Dubai','IDP Owned','Approved',12,12]
+  ];
+  var tcBody = $('#tc-list-body');
+  if(tcBody){
+    tcBody.innerHTML = tcRows.map(function(r){
+      return '<tr><td class="cell-link cell-mono">'+r[0]+'</td><td class="cell-link">'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td>'+r[4]+'</td><td>'+r[5]+'</td>' +
+        '<td><span class="badge warn"><span class="badge-dot"></span>'+r[6]+'</span></td>' +
+        '<td class="cell-link">View locations</td><td>'+r[8]+'</td></tr>';
+    }).join('');
+  }
+  var tcPag = $('#tc-list-pagination');
+  if(tcPag){
+    var pages = ['«','‹',1,2,3,4,5,6,7,8,9,'›','»'];
+    tcPag.innerHTML = pages.map(function(p){
+      var isActive = p === 1;
+      var isNum = typeof p === 'number';
+      return '<button class="pagebtn'+(isActive?' active':'')+'">'+p+'</button>';
+    }).join('');
+  }
+
+  /* ---------------- IOC Fee List data ---------------- */
+  var feeRows = [
+    ['IELTS on Computer Academic','IDP IELTS Abu Dhabi','Active','01-05-2025','AED','1470','462'],
+    ['IELTS on Computer Academic','IDP IELTS Abu Dhabi','Inactive','04-12-2024','AED','1370','462'],
+    ['IELTS on Computer Academic','IDP IELTS Abu Dhabi','Inactive','25-11-2024','AED','1270','462'],
+    ['IELTS on Computer Academic','IDP IELTS Abu Dhabi','Inactive','23-04-2024','AED','1370','462'],
+    ['IELTS on Computer Academic','IDP IELTS Abu Dhabi','Inactive','09-04-2024','AED','1340','462'],
+    ['IELTS on Computer Academic','IDP IELTS Abu Dhabi','Inactive','11-03-2024','AED','1240','462']
+  ];
+  var feeBody = $('#tc-fees-body');
+  if(feeBody){
+    feeBody.innerHTML = feeRows.map(function(r){
+      var badgeClass = r[2] === 'Active' ? 'success' : 'danger';
+      return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td>' +
+        '<td><span class="badge '+badgeClass+'"><span class="badge-dot"></span>'+r[2]+'</span></td>' +
+        '<td class="cell-mono">'+r[3]+'</td><td>'+r[4]+'</td><td class="cell-mono">'+r[5]+'</td><td class="cell-mono">'+r[6]+'</td>' +
+        '<td><span class="badge neutral">Yes</span></td><td><span class="badge neutral">Yes</span></td>' +
+        '<td class="rowaction"><button class="rowaction-btn">Action <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button>' +
+        '<div class="rowaction-menu"><button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>Edit fee</button>' +
+        '<button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>View history</button>' +
+        '<button class="danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6"/></svg>Deactivate</button></div></td></tr>';
+    }).join('');
+    wireRowActions();
+  }
+
+  /* ---------------- Voucher table data ---------------- */
+  var voucherRows = [
+    ['AE234_AL…','Usage Limit','6.8%','01-Nov-2025','30-Nov-2025','AE234',[['E-1000','danger']]],
+    ['AE234_AE…','Usage Limit','6.8%','01-Apr-2026','30-Apr-2026','AE234, AE750',[['R-11','warn'],['E-989','danger']]],
+    ['AE2_BTS_…','Single Use','6.8%','01-Sep-2025','31-Oct-2025','AE234',[['R-3','warn'],['E-97','danger']]],
+    ['AE234_AL…','Usage Limit','6.8%','01-Nov-2025','30-Nov-2025','AE234',[['R-1','warn'],['E-999','danger']]],
+    ['AE234_MI…','Single Use','6.8%','15-Apr-2026','30-Jun-2026','AE234',[['R-42','warn'],['E-58','danger']]]
+  ];
+  var voucherBody = $('#voucher-body');
+  if(voucherBody){
+    voucherBody.innerHTML = voucherRows.map(function(r){
+      var badges = r[6].map(function(b){ return '<span class="badge '+b[1]+'">'+b[0]+'</span>'; }).join(' ');
+      return '<tr><td class="cell-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'+r[0]+'</td>' +
+        '<td>'+r[1]+'</td><td class="cell-mono">'+r[2]+'</td><td class="cell-mono">'+r[3]+'</td><td class="cell-mono">'+r[4]+'</td><td class="cell-mono">'+r[5]+'</td>' +
+        '<td>'+badges+'</td>' +
+        '<td class="rowaction"><button class="rowaction-btn solid">•••</button>' +
+        '<div class="rowaction-menu"><button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>Edit voucher</button>' +
+        '<button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate</button>' +
+        '<button class="danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6"/></svg>Delete</button></div></td></tr>';
+    }).join('');
+    wireRowActions();
+  }
+
+  /* ---------------- Results table data ---------------- */
+  var resultRows = [
+    ['Aida Mikheyeva','aida_dzhumabekova@mail.ru','504958','IELTS on Computer Academic','22/08/2026 · 01:00 PM','22/08/2026 · 12:40 AM','Unconfirmed'],
+    ['Dyan Marie Bairan','dyempuns22@gmail.com','503337','IELTS on Computer Academic','22/08/2026 · 05:00 AM','22/08/2026 · 08:30 AM','Unconfirmed'],
+    ['Leonardo Aguiar Valencia','eleon.av92@gmail.com','500388','IELTS on Computer General Training','22/08/2026 · 09:00 AM','22/08/2026 · 07:40 AM','Unconfirmed'],
+    ['Farid Stick Paez Cañon','farid.paez2648@correo.policia.gov.co','500286','IELTS on Computer General Training','22/08/2026 · 09:00 AM','22/08/2026 · 07:40 AM','Unconfirmed']
+  ];
+  var resultsBody = $('#results-body');
+  if(resultsBody){
+    resultsBody.innerHTML = resultRows.map(function(r){
+      return '<tr><td><span class="chk"></span></td>' +
+        '<td><strong>'+r[0]+'</strong><div class="cell-sub">'+r[1]+' · '+r[2]+'</div></td>' +
+        '<td class="cell-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/></svg>'+r[3]+'</td>' +
+        '<td class="cell-mono">'+r[4]+'</td><td class="cell-mono">'+r[5]+'</td>' +
+        '<td><span class="badge warn"><span class="badge-dot"></span>'+r[6]+'</span></td>' +
+        '<td><span class="badge neutral">—</span></td><td><span class="badge neutral">—</span></td><td><span class="badge neutral">—</span></td>' +
+        '<td class="rowaction"><button class="rowaction-btn">Actions <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button>' +
+        '<div class="rowaction-menu"><button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>View result</button>' +
+        '<button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Confirm result</button>' +
+        '<button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>Generate TRF</button></div></td></tr>';
+    }).join('');
+    wireRowActions();
+  }
+
+  /* ---------------- Applications data (with rich per-row detail content, 8 tabs) ---------------- */
+  var appRows = [
+    {
+      name:'VU NAM THANG NGUYEN', age:'16Y 10M', email:'cacomhp29@gmail.com', number:'537068',
+      product:'IELTS on Computer Academic', lrw:'25/08/2026 · 01:00 PM', speaking:'25/08/2026 · 08:30 AM',
+      application:['Complete','success'], payment:['Paid – Offline payment','success'], verification:['Unverified','danger'],
+      refund:'NA', eor:'—', transfer:'—', rp:true,
+      detail:{
+        location:'IDP IELTS Vietnam - Hai Phong',
+        personalId:{status:'Unverified', badge:'danger', updated:'12/08/2026, 08:19 AM'},
+        address:{line1:'VU HUE HP', line2:'14c/68/476 Cho Hang, Le Chan', state:'Hải Phòng', city:'Hai Phong', country:'Vietnam', postcode:'180000'},
+        payment:{ref:'BXA1544336: 4664000 - VND', method:'Funds Transfer', refNumber:'NTH27-08005004', date:'14-08-2026', note:''},
+        guardian:{first:'Thi Kim Oanh', dob:'1976-12-31', phone:'+84904055323', last:'Vu', relationship:'Mother'},
+        rpDetails:{name:'Thi Kim Oanh', relationship:'Mother', contact:'+84904055323'}
+      }
+    },
+    {
+      name:'XIAOTIAN PAN', age:'17Y 11M', email:'2979892080@qq.com', number:'523151',
+      product:'IELTS on Computer Academic', lrw:'28/08/2026 · 09:00 AM', speaking:'28/08/2026 · 02:00 PM',
+      application:['Complete','success'], payment:['Paid – Offline payment','success'], verification:['Verified','success'],
+      refund:'NA', eor:'—', transfer:'—', rp:false,
+      detail:{
+        location:'IDP IELTS China - Shanghai',
+        personalId:{status:'Verified', badge:'success', updated:'20/08/2026, 10:02 AM'},
+        address:{line1:'88 Nanjing Road', line2:'', state:'Shanghai', city:'Shanghai', country:'China', postcode:'200003'},
+        payment:{ref:'BXA1598820: 2100000 - CNY', method:'Offline Payment', refNumber:'OFP26-081102', date:'19-08-2026', note:''},
+        guardian:null,
+        rpDetails:null
+      }
+    },
+    {
+      name:'QUANG TUAN TRAN', age:null, email:'trantuan205nb@gmail.com', number:'534474',
+      product:'IELTS OSR on Computer Academic', lrw:'26/08/2026 · 09:30 AM', speaking:'—',
+      application:['Complete','success'], payment:['Paid','success'], verification:['Verified','success'],
+      refund:'NA', eor:'—', transfer:'—', rp:false,
+      detail:{
+        location:'IDP IELTS Vietnam - Ho Chi Minh City',
+        personalId:{status:'Verified', badge:'success', updated:'21/08/2026, 09:44 AM'},
+        address:{line1:'12 Le Loi', line2:'', state:'', city:'Ho Chi Minh City', country:'Vietnam', postcode:'700000'},
+        payment:{ref:'BXA1602211: 4100000 - VND', method:'Credit Card', refNumber:'CC26-081904', date:'20-08-2026', note:''},
+        guardian:null,
+        rpDetails:null
+      }
+    }
+  ];
+
+  function accordionHtml(title, bodyHtml, opts){
+    opts = opts || {};
+    var openCls = opts.open ? ' open' : '';
+    var staticCls = opts.staticHead ? ' static' : '';
+    var badgeHtml = opts.badge ? '<span class="badge '+opts.badge.cls+'" style="margin-left:8px;">'+opts.badge.text+' <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></span>' : '';
+    var metaHtml = opts.meta ? '<span class="ameta">'+opts.meta+'</span>' : '';
+    var valHtml = opts.value ? '<span class="aval">'+opts.value+'</span>' : '';
+    var chevHtml = opts.staticHead ? '' : '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>';
+    return '<div class="accordion'+openCls+'">' +
+      '<div class="accordion-head'+staticCls+'">' +
+        '<span class="bar"></span><span class="atitle">'+title+'</span>'+valHtml+badgeHtml+metaHtml+chevHtml +
+      '</div>' +
+      (opts.staticHead ? '' : '<div class="accordion-body">'+bodyHtml+'</div>') +
+    '</div>';
+  }
+
+  function emptyMini(text){ return '<div class="emptystate-mini">'+text+'</div>'; }
+
+  function renderTestDetailsTab(d){
+    var loc = accordionHtml('Location:', '', { staticHead:true, value:d.location });
+    var personal = accordionHtml('Personal &amp; ID Info',
+      '<p style="font-size:12.8px; color:var(--muted); margin:0;">Identity verification is required before the candidate can sit their test. Update status once documents are checked.</p>',
+      { open:false, badge:{text:d.personalId.status, cls:d.personalId.badge}, meta:'ID Updated: '+d.personalId.updated+'&nbsp;&nbsp;&nbsp;&nbsp;Status Updated: —' }
+    );
+    var biometric = accordionHtml('Biometric Consent', emptyMini('No biometric consent captured for this candidate yet.'), {open:false});
+    var a = d.address;
+    var addressBody =
+      '<div class="fieldgrid2">' +
+        '<div class="field"><label>Address Line 1</label><input type="text" value="'+a.line1+'" readonly></div>' +
+        '<div class="field"><label>State, region or province</label><input type="text" value="'+(a.state||'—')+'" readonly></div>' +
+        '<div class="field"><label>Address Line 2</label><input type="text" value="'+(a.line2||'')+'" readonly></div>' +
+        '<div class="field"><label>City</label><input type="text" value="'+a.city+'" readonly></div>' +
+        '<div class="field"><label>Country</label><input type="text" value="'+a.country+'" readonly></div>' +
+        '<div class="field"><label>Postcode, zip code or area code</label><input type="text" value="'+a.postcode+'" readonly></div>' +
+      '</div>';
+    var address = accordionHtml('Address', addressBody, {open:true});
+    return loc + personal + biometric + address;
+  }
+
+  function renderPaymentsTab(p){
+    if(!p) return emptyMini('No payment records found for this application.');
+    return '<div class="paymentcard open">' +
+      '<div class="paymentcard-head">' +
+        '<span class="bar"></span><a class="ptitle" href="#" onclick="return false;">'+p.ref+'</a>' +
+        '<button class="btn-copy" onclick="event.stopPropagation();this.textContent=\'Copied!\';setTimeout(()=>this.textContent=\'Copy\',1200);">Copy</button>' +
+        '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>' +
+      '</div>' +
+      '<div class="paymentcard-body"><div class="fieldgrid2">' +
+        '<div class="field"><label>Payment Method <span style="color:var(--danger)">*</span></label><input type="text" value="'+p.method+'" readonly></div>' +
+        '<div class="field"><label>Reference Number <span style="color:var(--danger)">*</span></label><input type="text" value="'+p.refNumber+'" readonly></div>' +
+        '<div class="field"><label>Payment Date <span style="color:var(--danger)">*</span></label><input type="text" value="'+p.date+'" readonly></div>' +
+        '<div class="field"><label>Note</label><textarea rows="2">'+(p.note||'')+'</textarea></div>' +
+      '</div></div>' +
+    '</div>';
+  }
+
+  function renderGuardianTab(g){
+    if(!g) return emptyMini('Not applicable — no guardian information required for this candidate.');
+    return '<div class="fieldgrid2">' +
+      '<div class="field"><label>First Name</label><input type="text" value="'+g.first+'" readonly></div>' +
+      '<div class="field"><label>Last Name</label><input type="text" value="'+g.last+'" readonly></div>' +
+      '<div class="field"><label>Date of Birth</label><input type="text" value="'+g.dob+'" readonly></div>' +
+      '<div class="field"><label>Relationship to Test Taker</label><input type="text" value="'+g.relationship+'" readonly></div>' +
+      '<div class="field"><label>Mobile Number</label><input type="text" value="'+g.phone+'" readonly></div>' +
+    '</div>';
+  }
+
+  function renderRpTab(rp){
+    if(!rp) return emptyMini('Not applicable — this candidate is not flagged as requiring a Responsible Person.');
+    return '<div class="fieldgrid2">' +
+      '<div class="field"><label>Name</label><input type="text" value="'+rp.name+'" readonly></div>' +
+      '<div class="field"><label>Relationship to Test Taker</label><input type="text" value="'+rp.relationship+'" readonly></div>' +
+      '<div class="field"><label>Contact Number</label><input type="text" value="'+rp.contact+'" readonly></div>' +
+    '</div>';
+  }
+
+  function renderAppDetail(r, idx){
+    var d = r.detail;
+    var p = 'app'+idx+'-';
+    return '<div class="tabscope">' +
+      '<div class="tabrow nested">' +
+        '<button class="tabbtn active" data-subtab="'+p+'testdetails">Test Details</button>' +
+        '<button class="tabbtn" data-subtab="'+p+'payments">Payments</button>' +
+        '<button class="tabbtn" data-subtab="'+p+'iam">IAM Photo Import</button>' +
+        '<button class="tabbtn" data-subtab="'+p+'access">Access Arrangements</button>' +
+        '<button class="tabbtn" data-subtab="'+p+'linked">Linked Applications</button>' +
+        '<button class="tabbtn" data-subtab="'+p+'ro">RO Management</button>' +
+        '<button class="tabbtn" data-subtab="'+p+'rp">RP Details</button>' +
+        '<button class="tabbtn" data-subtab="'+p+'guardian">Guardian Information</button>' +
+      '</div>' +
+      '<div class="subtab active" id="'+p+'testdetails">'+renderTestDetailsTab(d)+'</div>' +
+      '<div class="subtab" id="'+p+'payments">'+renderPaymentsTab(d.payment)+'</div>' +
+      '<div class="subtab" id="'+p+'iam">' +
+        '<div class="dropzone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><div class="dz-title">Drop a candidate photo here or click to browse</div><div class="dz-sub">Used to populate the ID photo via IAM import</div></div>' +
+      '</div>' +
+      '<div class="subtab" id="'+p+'access">'+emptyMini('No access arrangements requested for this candidate.')+'</div>' +
+      '<div class="subtab" id="'+p+'linked">'+emptyMini('No linked applications found for this candidate.')+'</div>' +
+      '<div class="subtab" id="'+p+'ro">'+emptyMini('No regional office actions recorded for this application.')+'</div>' +
+      '<div class="subtab" id="'+p+'rp">'+renderRpTab(d.rpDetails)+'</div>' +
+      '<div class="subtab" id="'+p+'guardian">'+renderGuardianTab(d.guardian)+'</div>' +
+    '</div>';
+  }
+
+  var appsBody = $('#apps-body');
+  if(appsBody){
+    appsBody.innerHTML = appRows.map(function(r, idx){
+      var mainRow = '<tr><td>' +
+          (r.age ? '<span class="agebadge">'+r.age+'</span><br>' : '') +
+          '<span class="cell-link">'+r.name+'</span><div class="cell-sub">'+r.email+'</div>' +
+          (r.rp ? '<span class="rptag">RP</span>' : '') +
+          '<button class="viewdetails" data-target="app-detail-'+idx+'">View details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button>' +
+        '</td>' +
+        '<td class="cell-mono">'+r.number+'</td>' +
+        '<td>'+r.product+'</td>' +
+        '<td class="cell-mono">'+r.lrw+'</td>' +
+        '<td class="cell-mono">'+r.speaking+'</td>' +
+        '<td><span class="badge '+r.application[1]+'"><span class="badge-dot"></span>'+r.application[0]+'</span></td>' +
+        '<td><span class="badge '+r.payment[1]+'"><span class="badge-dot"></span>'+r.payment[0]+'</span></td>' +
+        '<td><span class="badge '+r.verification[1]+'"><span class="badge-dot"></span>'+r.verification[0]+'</span></td>' +
+        '<td>'+r.refund+'</td><td>'+r.eor+'</td><td>'+r.transfer+'</td>' +
+        '<td class="rowaction"><button class="rowaction-btn solid">•••</button>' +
+        '<div class="rowaction-menu"><button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>View application</button>' +
+        '<button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Transfer</button>' +
+        '<button class="danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M4.9 4.9l14.2 14.2"/></svg>Cancel application</button></div></td></tr>';
+
+      var detailRow = '<tr class="detail-row closed" id="app-detail-'+idx+'"><td colspan="12">' +
+        '<div class="detail-panel">' + renderAppDetail(r, idx) + '</div>' +
+      '</td></tr>';
+
+      return mainRow + detailRow;
+    }).join('');
+    wireRowActions();
+    $all('.tabscope', appsBody).forEach(wireTabScope);
+
+    /* delegated: View details / Collapse toggle, and accordion / payment-card toggles */
+    appsBody.addEventListener('click', function(e){
+      var btn = e.target.closest('.viewdetails');
+      if(btn){
+        var panel = document.getElementById(btn.getAttribute('data-target'));
+        if(!panel) return;
+        var nowClosed = panel.classList.toggle('closed');
+        btn.classList.toggle('open', !nowClosed);
+        btn.firstChild.textContent = nowClosed ? 'View details ' : 'Collapse ';
+        return;
+      }
+      var accHead = e.target.closest('.accordion-head');
+      if(accHead && !accHead.classList.contains('static')){
+        var acc = accHead.closest('.accordion');
+        if(acc) acc.classList.toggle('open');
+        return;
+      }
+      var payHead = e.target.closest('.paymentcard-head');
+      if(payHead){
+        var pay = payHead.closest('.paymentcard');
+        if(pay) pay.classList.toggle('open');
+        return;
+      }
+    });
+  }
+
+  /* ---------------- Referral Partners: Applicants list ---------------- */
+  var rpApplicants = [
+    {name:'INTERSTATION GROUP CO., LTD.', country:'Thailand', status:'PENDING', date:'21/08/2026',
+      applicant:{name:'Tanakorn Triamchanadej', email:'tanakorn.t@interstationgroup.co.th', mobile:'+66 81 234 5678'}},
+    {name:'Pro SA STUDY ADVISORS IMMIGRATION', country:'Pakistan', status:'PENDING', date:'21/08/2026',
+      applicant:{name:'Sara Ahmed', email:'sara.ahmed@prosastudy.pk', mobile:'+92 300 1234567'}},
+    {name:'ИП Алан', country:'Kazakhstan', status:'PENDING', date:'20/08/2026',
+      applicant:{name:'Alan Bekov', email:'alan.bekov@mail.kz', mobile:'+7 701 234 5678'}}
+  ];
+  var rpApplicantsList = $('#rp-applicants-list');
+  if(rpApplicantsList){
+    rpApplicantsList.innerHTML = rpApplicants.map(function(r, idx){
+      return '<div class="rp-list-row">' +
+        '<div class="rp-list-main" style="grid-template-columns:2fr 1.2fr 1fr 1.2fr auto;">' +
+          '<div><a class="cell-link" href="#" onclick="return false;">'+r.name+'</a></div>' +
+          '<div>'+r.country+'</div>' +
+          '<div><span class="badge warn"><span class="badge-dot"></span>'+r.status+'</span></div>' +
+          '<div class="cell-mono">'+r.date+'</div>' +
+          '<div><button class="btn-details" data-target="rp-app-detail-'+idx+'">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button></div>' +
+        '</div>' +
+        '<div class="rp-detail" id="rp-app-detail-'+idx+'">' +
+          '<div class="tabrow nested"><button class="tabbtn active" style="cursor:default;">Applicant Details</button></div>' +
+          '<div class="accordion open">' +
+            '<div class="accordion-head"><span class="bar"></span><span class="atitle">Application Details</span><span style="margin-left:auto;"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></div>' +
+            '<div class="accordion-body"><div class="fieldgrid2">' +
+              '<div class="field"><label>Applicant Name</label><input type="text" value="'+r.applicant.name+'" readonly></div>' +
+              '<div class="field"><label>Email</label><input type="text" value="'+r.applicant.email+'" readonly></div>' +
+              '<div class="field"><label>Mobile Number</label><input type="text" value="'+r.applicant.mobile+'" readonly></div>' +
+            '</div></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    rpApplicantsList.addEventListener('click', function(e){
+      var btn = e.target.closest('.btn-details');
+      if(btn){
+        var panel = document.getElementById(btn.getAttribute('data-target'));
+        if(panel){
+          var nowOpen = panel.classList.toggle('open');
+          btn.classList.toggle('open', nowOpen);
+        }
+        return;
+      }
+      var accHead = e.target.closest('.accordion-head');
+      if(accHead){
+        var acc = accHead.closest('.accordion');
+        if(acc) acc.classList.toggle('open');
+      }
+    });
+  }
+
+  /* ---------------- Referral Partners: generic checkbox dropdown (Commission Management country picker) ---------------- */
+  function wireCheckDropdown(triggerId, panelId){
+    var trigger = $('#'+triggerId), panel = $('#'+panelId);
+    if(!trigger || !panel) return;
+    trigger.addEventListener('click', function(e){
+      panel.classList.toggle('open');
+      e.stopPropagation();
+    });
+    $all('.checkdrop-option', panel).forEach(function(opt){
+      opt.addEventListener('click', function(){ opt.classList.toggle('checked'); });
+    });
+    document.addEventListener('click', function(e){
+      if(!panel.contains(e.target) && e.target !== trigger){ panel.classList.remove('open'); }
+    });
+    panel.addEventListener('click', function(e){ e.stopPropagation(); });
+  }
+  wireCheckDropdown('cmCountryTrigger', 'cmCountryPanel');
+
+  /* ---------------- Referral Partners: month/year picker (Commission Payout) ---------------- */
+  var payoutTrigger = $('#payoutDateTrigger'), payoutPanel = $('#payoutDatePanel'), payoutLabel = $('#payoutDateLabel');
+  var myYearEl = $('#myYear');
+  var myYear = 2026;
+  var selectedMonths = ['July'];
+
+  function updatePayoutLabel(){
+    if(selectedMonths.length){
+      payoutLabel.textContent = selectedMonths.join(', ') + ' ' + myYear;
+      payoutLabel.classList.remove('ph');
+    } else {
+      payoutLabel.textContent = 'Select Month & Year';
+      payoutLabel.classList.add('ph');
+    }
+  }
+
+  if(payoutTrigger && payoutPanel){
+    payoutTrigger.addEventListener('click', function(e){
+      payoutPanel.classList.toggle('open');
+      e.stopPropagation();
+    });
+    payoutPanel.addEventListener('click', function(e){ e.stopPropagation(); });
+    document.addEventListener('click', function(e){
+      if(!payoutPanel.contains(e.target) && e.target !== payoutTrigger){ payoutPanel.classList.remove('open'); }
+    });
+    $all('.monthyear-option:not(.disabled)', payoutPanel).forEach(function(opt){
+      var month = opt.getAttribute('data-month');
+      if(selectedMonths.indexOf(month) !== -1){ opt.classList.add('checked'); }
+      opt.addEventListener('click', function(){
+        opt.classList.toggle('checked');
+        var idx = selectedMonths.indexOf(month);
+        if(opt.classList.contains('checked') && idx === -1){ selectedMonths.push(month); }
+        if(!opt.classList.contains('checked') && idx !== -1){ selectedMonths.splice(idx, 1); }
+        updatePayoutLabel();
+      });
+    });
+    updatePayoutLabel();
+
+    $('#myPrev').addEventListener('click', function(){ myYear--; myYearEl.textContent = myYear; });
+    $('#myNext').addEventListener('click', function(){ myYear++; myYearEl.textContent = myYear; });
+  }
+
+  /* ---------------- Referral Partners: Commission Payout search + results ---------------- */
+  var payoutPrompt = $('#payoutPrompt'), payoutResults = $('#payoutResults'), payoutList = $('#payoutList');
+  var payoutData = {
+    partner:'Al Bayan International Institute', centre:'IDP Education Abu Dhabi', period:'2026-07-01 to 2026-07-31',
+    bookingCount:'31.0', bookingAmount:'45570.0', commissionType:'AMOUNT', commissionPerReferral:'60.0',
+    tier:'BRONZE', tierRange:'1-49', totalCommission:'1860.0', status:'-',
+    candidates:[
+      {email:'remasf100@icloud.com', booked:'07/29/2026', lrw:'07/30/2026 07:00 AM', speaking:'07/30/2026 04:40 AM', appStatus:'COMPLETE', payStatus:'PAID', payMethod:'OFFLINE', verification:'VERIFIED', published:'YES', publishedDate:'07/31/2026 12:00 AM'},
+      {email:'wadha_a2009@icloud.com', booked:'07/28/2026', lrw:'07/30/2026 07:00 AM', speaking:'07/30/2026 05:40 AM', appStatus:'COMPLETE', payStatus:'PAID', payMethod:'OFFLINE', verification:'VERIFIED', published:'YES', publishedDate:'07/31/2026 12:00 AM'},
+      {email:'saoodaliunaibio@gmail.com', booked:'07/29/2026', lrw:'07/30/2026 07:00 AM', speaking:'07/30/2026 05:00 AM', appStatus:'COMPLETE', payStatus:'PAID', payMethod:'OFFLINE', verification:'VERIFIED', published:'YES', publishedDate:'07/31/2026 12:00 AM'}
+    ]
+  };
+
+  function renderPayoutResults(){
+    var d = payoutData;
+    var candidateRows = d.candidates.map(function(c){
+      return '<tr><td>'+c.email+' <button class="copy-inline" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+c.email+'\');"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></td>' +
+        '<td class="cell-mono">'+c.booked+'</td><td class="cell-mono">'+c.lrw+'</td><td class="cell-mono">'+c.speaking+'</td>' +
+        '<td><span class="badge success">'+c.appStatus+'</span></td><td><span class="badge success">'+c.payStatus+'</span></td>' +
+        '<td>'+c.payMethod+'</td><td><span class="badge success">'+c.verification+'</span></td>' +
+        '<td><span class="badge success">'+c.published+'</span></td><td class="cell-mono">'+c.publishedDate+'</td></tr>';
+    }).join('');
+
+    payoutList.innerHTML =
+      '<div class="rp-list-row">' +
+        '<div class="rp-list-main" style="grid-template-columns:1.4fr 1.2fr 1.3fr 0.8fr 0.9fr 0.9fr 0.9fr 0.7fr 0.7fr 0.9fr 0.6fr auto;">' +
+          '<div>'+d.partner+'</div><div>'+d.centre+'</div><div class="cell-mono">'+d.period+'</div>' +
+          '<div class="cell-mono">'+d.bookingCount+'</div><div class="cell-mono">'+d.bookingAmount+'</div>' +
+          '<div>'+d.commissionType+'</div><div class="cell-mono">'+d.commissionPerReferral+'</div>' +
+          '<div><span class="badge warn">'+d.tier+'</span></div><div>'+d.tierRange+'</div>' +
+          '<div class="cell-mono">'+d.totalCommission+'</div><div>'+d.status+'</div>' +
+          '<div><button class="btn-details open" data-target="rp-payout-detail-0">Details <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button></div>' +
+        '</div>' +
+        '<div class="rp-detail open" id="rp-payout-detail-0">' +
+          '<div class="tablecard" style="overflow-x:auto;"><table class="datatable"><thead><tr>' +
+            '<th>TT Email</th><th>Booked Date</th><th>LRW Test Date</th><th>Speaking Test Date</th><th>Application Status</th>' +
+            '<th>Payment Status</th><th>Payment Method</th><th>Verification Status</th><th>Result Published</th><th>Result Published Date</th>' +
+          '</tr></thead><tbody>'+candidateRows+'</tbody></table></div>' +
+        '</div>' +
+      '</div>';
+
+    $all('.btn-details', payoutList).forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var panel = document.getElementById(btn.getAttribute('data-target'));
+        if(panel){
+          var nowOpen = panel.classList.toggle('open');
+          btn.classList.toggle('open', nowOpen);
+        }
+      });
+    });
+  }
+
+  var payoutSearchBtn = $('#payoutSearch'), payoutClearBtn = $('#payoutClear');
+  if(payoutSearchBtn){
+    payoutSearchBtn.addEventListener('click', function(){
+      renderPayoutResults();
+      payoutPrompt.classList.add('hidden');
+      payoutResults.classList.remove('hidden');
+    });
+  }
+  if(payoutClearBtn){
+    payoutClearBtn.addEventListener('click', function(){
+      payoutResults.classList.add('hidden');
+      payoutPrompt.classList.remove('hidden');
+      selectedMonths = [];
+      $all('.monthyear-option.checked').forEach(function(o){ o.classList.remove('checked'); });
+      if(payoutLabel) updatePayoutLabel();
+    });
+  }
+
+  /* ---------------- Session Management calendar ---------------- */
+  var days = [
+    {dow:'Sunday', dd:'Aug 16', today:false},
+    {dow:'Monday', dd:'Aug 17', today:false},
+    {dow:'Tuesday', dd:'Aug 18', today:false},
+    {dow:'Wednesday', dd:'Aug 19', today:false},
+    {dow:'Thursday', dd:'Aug 20', today:false},
+    {dow:'Friday', dd:'Aug 21', today:true},
+    {dow:'Saturday', dd:'Aug 22', today:false}
+  ];
+  var startHour = 8, endHour = 19; // 8am - 7pm
+  var totalHours = endHour - startHour + 1;
+
+  function buildCalendar(){
+    var grid = $('#calgrid');
+    if(!grid) return;
+    var html = '<div class="dayhead" style="border-left:none;"></div>';
+    days.forEach(function(d){
+      html += '<div class="dayhead'+(d.today?' today':'')+'"><div class="dow">'+d.dow+'</div><div class="dd">'+d.dd+'</div></div>';
+    });
+    // time column
+    html += '<div class="timecol">';
+    for(var h=startHour; h<=endHour; h++){
+      var label = (h % 12 === 0 ? 12 : h % 12) + (h < 12 ? ' AM' : ' PM');
+      html += '<span>'+label+'</span>';
+    }
+    html += '</div>';
+
+    // per-day columns with generated blocks
+    var densityByDay = [0, 22, 6, 20, 6, 22, 3]; // number of blocks roughly matching source screenshot pattern
+    var colorClasses = ['lrw-draft','lrw-draft','lrw-draft','lrw-draft','lrw-pub'];
+    days.forEach(function(d, di){
+      html += '<div class="daycol" style="height:'+(totalHours*64)+'px;">';
+      for(var h=0; h<totalHours; h++){ html += '<div class="hourslot"></div>'; }
+      var n = densityByDay[di];
+      var usedSlots = [];
+      for(var i=0;i<n;i++){
+        var slot = Math.floor(Math.random()* (totalHours*3)); // 20-min increments
+        if(usedSlots.indexOf(slot) !== -1) continue;
+        usedSlots.push(slot);
+        var top = (slot/3)*64 + 2;
+        var isTeal = (di===2||di===4||di===5) && (i > n-4);
+        var cls = isTeal ? 'lrw-pub' : (Math.random()>0.85 ? 'speak-pub' : 'lrw-draft');
+        var hourVal = startHour + Math.floor(slot/3);
+        var minVal = (slot%3)*20;
+        var label = (hourVal%12===0?12:hourVal%12) + ':' + (minVal<10?'0':'') + minVal + (hourVal<12?'AM':'PM');
+        html += '<div class="sessblock '+cls+'" style="top:'+top+'px; height:26px;">'+label+'</div>';
+      }
+      html += '</div>';
+    });
+    grid.innerHTML = html;
+  }
+  buildCalendar();
+
+})();
+</script>
+</body>
+</html>

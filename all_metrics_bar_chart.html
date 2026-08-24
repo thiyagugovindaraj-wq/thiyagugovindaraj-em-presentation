@@ -1,0 +1,64 @@
+<h1 class="sr-only">Booking metrics in August 2026</h1>
+
+<div id="legend" style="display:flex; flex-wrap:wrap; gap:16px; margin-bottom:8px; font-size:12px; color:var(--text-secondary);"></div>
+<div style="position:relative; width:100%; height:360px;">
+  <canvas id="chart" role="img" aria-label="Bar chart by date, August 2026, all five metrics">Daily values for August 2026 across occupancy, cancellation, actual occupancy, actual cancellation, and transfer percentage.</canvas>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const raw = [
+["01-08-2026",51.65,26.56,7.47,19.09,32.56],["02-08-2026",52.26,25.13,5.76,19.37,32.89],
+["03-08-2026",43.25,25.83,5.08,20.75,22.5],["04-08-2026",36.87,26.89,6.01,20.88,15.99],
+["05-08-2026",40.36,27.54,6.85,20.69,19.67],["06-08-2026",44.65,23.75,4.47,19.28,25.37],
+["07-08-2026",42.8,25.57,6.07,19.5,23.3],["08-08-2026",56.16,25.06,6.47,18.59,37.57],
+["09-08-2026",54.96,22.85,5.45,17.4,37.56],["10-08-2026",51.34,26.7,5.75,20.95,30.39],
+["11-08-2026",43.44,24.41,5.37,19.04,24.4],["12-08-2026",43.11,24.45,6.47,17.98,25.13],
+["13-08-2026",42.07,23.39,6.29,17.1,24.97],["14-08-2026",47.19,24.53,6.28,18.25,28.94],
+["15-08-2026",56.71,27.69,6.61,21.08,35.63],["16-08-2026",62.24,23.25,5.49,17.76,44.48],
+["17-08-2026",52.83,23.94,5.53,18.41,34.42],["18-08-2026",49.37,24.04,5.42,18.62,30.75],
+["19-08-2026",44.5,26.46,7.56,18.9,25.6],["20-08-2026",55.44,25.34,6.68,18.66,36.78],
+["21-08-2026",54.32,23.3,6.95,16.35,37.97],["22-08-2026",63.91,23.68,7.1,16.58,47.33],
+["23-08-2026",66.23,22.06,5.52,16.54,49.69],["24-08-2026",47.63,21.81,5.49,16.32,31.31],
+["25-08-2026",48.82,23.49,5.72,17.77,31.05],["26-08-2026",43.77,23.64,4.74,18.9,24.87],
+["27-08-2026",45.85,23.55,6.1,17.45,28.4],["28-08-2026",47.04,23.34,6,17.34,29.7],
+["29-08-2026",52.79,24.99,5.81,19.18,33.61],["30-08-2026",57.19,27.22,5.09,22.13,35.06],
+["31-08-2026",44.51,26.09,5.84,20.25,24.26]
+];
+const labels = raw.map(r => r[0].slice(0,2));
+const occ = raw.map(r => r[1]);
+const canc = raw.map(r => r[2]);
+const trf = raw.map(r => r[3]);
+const actCanc = raw.map(r => r[4]);
+const actOcc = raw.map(r => r[5]);
+
+const colors = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4'];
+const datasets = [
+  { label: 'Booked occupancy %', data: occ, backgroundColor: colors[0] },
+  { label: 'Actual occupancy %', data: actOcc, backgroundColor: colors[1] },
+  { label: 'Booked cancellation %', data: canc, backgroundColor: colors[2] },
+  { label: 'Actual cancellation %', data: actCanc, backgroundColor: colors[3] },
+  { label: 'Transfer %', data: trf, backgroundColor: colors[4] }
+].map(d => ({...d, borderRadius: 3, maxBarThickness: 7}));
+
+const ctx = document.getElementById('chart');
+new Chart(ctx, {
+  type: 'bar',
+  data: { labels, datasets },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+      x: { ticks: { autoSkip: true, maxRotation: 0, color: '#898781' }, grid: { display: false } },
+      y: { ticks: { color: '#898781' }, grid: { color: '#e1e0d9' }, title: { display: true, text: '%', color: '#898781' } }
+    },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { title: (items) => 'Aug ' + items[0].label } } }
+  }
+});
+
+const legend = document.getElementById('legend');
+datasets.forEach(d => {
+  const span = document.createElement('span');
+  span.style.cssText = 'display:flex;align-items:center;gap:4px;';
+  span.innerHTML = '<span style="width:10px;height:10px;border-radius:2px;background:' + d.backgroundColor + ';"></span>' + d.label;
+  legend.appendChild(span);
+});
+</script>

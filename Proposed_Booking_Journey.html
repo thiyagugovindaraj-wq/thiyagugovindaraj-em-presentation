@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IELTS Booking — Redesign Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --maroon:#A6093D;
+  --maroon-deep:#6F0629;
+  --maroon-tint:#FBEAEF;
+  --gold:#B8863B;
+  --gold-tint:#FBF3E4;
+  --cream:#F6F3EF;
+  --surface:#FFFFFF;
+  --surface-2:#FBF9F6;
+  --ink:#221A1D;
+  --muted:#7C7074;
+  --faint:#B3A9AC;
+  --border:#E9E2DD;
+  --success:#1E7B45;
+  --success-bg:#E9F6EE;
+  --info-bg:#EEF0FB;
+  --info-text:#3B3599;
+  --warn-bg:#FCF1DE;
+  --warn-text:#8A5A15;
+  --radius-lg:18px;
+  --radius-md:12px;
+  --radius-sm:8px;
+  --display:'Space Grotesk', sans-serif;
+  --sans:'Inter', sans-serif;
+  --mono:'IBM Plex Mono', monospace;
+  --shadow-1: 0 1px 2px rgba(34,26,29,0.06), 0 1px 1px rgba(34,26,29,0.04);
+  --shadow-2: 0 12px 28px -12px rgba(34,26,29,0.18), 0 2px 8px rgba(34,26,29,0.06);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--cream);
+  color:var(--ink);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+h1,h2,h3{font-family:var(--display); margin:0; letter-spacing:-0.01em;}
+p{margin:0;}
+button{font-family:inherit;}
+a{color:inherit;}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+::selection{background:var(--maroon); color:#fff;}
+
+/* focus visibility */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible{
+  outline:2px solid var(--maroon);
+  outline-offset:2px;
+  border-radius:6px;
+}
+
+/* ---------------- top brand + progress bar ---------------- */
+.brandbar{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:0;
+  z-index:80;
+}
+.brandbar-inner{
+  max-width:1180px;
+  margin:0 auto;
+  padding:14px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  flex-wrap:wrap;
+}
+.brandmark{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-family:var(--display);
+  font-weight:700;
+  font-size:19px;
+  color:var(--ink);
+  white-space:nowrap;
+}
+.brandmark .petals{width:22px;height:22px;flex:none;}
+.brandmark .idp{color:var(--muted); font-weight:100;}
+.brandmark .ielts{color:var(--maroon);}
+
+.stagebar{
+  display:flex;
+  align-items:center;
+  gap:0;
+  font-family:var(--mono);
+  font-size:11.5px;
+  letter-spacing:0.02em;
+}
+.stage{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px;
+  border-radius:999px;
+  color:var(--faint);
+  background:transparent;
+  border:none;
+  cursor:default;
+  white-space:nowrap;
+}
+.stage .num{
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  border:1.5px solid var(--faint);
+  font-size:10px;
+  flex:none;
+}
+.stage.done{color:var(--maroon); cursor:pointer;}
+.stage.done .num{border-color:var(--maroon); background:var(--maroon); color:#fff;}
+.stage.current{color:var(--ink); font-weight:600;}
+.stage.current .num{border-color:var(--maroon); color:var(--maroon);}
+.stage-sep{width:22px; height:1px; background:var(--border); margin:0 2px;}
+
+/* condensed selection bar (pages 2 & 3) */
+.selectionbar{
+  background:var(--maroon-deep);
+  color:#fff;
+}
+.selectionbar-inner{
+  max-width:1180px;
+  margin:0 auto;
+  padding:10px 24px;
+  display:flex;
+  align-items:center;
+  gap:22px;
+  flex-wrap:wrap;
+  font-size:12.5px;
+}
+.selectionbar-item{display:flex; align-items:center; gap:7px; opacity:0.92;}
+.selectionbar-item svg{width:15px;height:15px; flex:none; opacity:0.85;}
+.selectionbar-edit{
+  margin-left:auto;
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.28);
+  color:#fff;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+}
+.selectionbar-edit:hover{background:rgba(255,255,255,0.2);}
+.selectionbar-edit svg{width:13px;height:13px;}
+
+/* ---------------- shell / page ---------------- */
+.app{max-width:1180px; margin:0 auto; padding:36px 24px 90px;}
+.page{display:none;}
+.page.active{display:block; animation:pageIn .32s ease;}
+@keyframes pageIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+@media (prefers-reduced-motion:reduce){ .page.active{animation:none;} }
+
+.page-head{margin-bottom:26px;}
+.page-eyebrow{
+  font-family:var(--mono);
+  font-size:11.5px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--maroon);
+  margin-bottom:8px;
+  display:block;
+}
+.page-head h1{font-size:30px; font-weight:700;}
+.page-head p{margin-top:8px; color:var(--muted); font-size:14.5px; max-width:60ch;}
+
+/* ---------------- accordion "stub" steps (page 1) ---------------- */
+.stubs{display:flex; flex-direction:column; gap:14px;}
+.stub{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-1);
+  overflow:hidden;
+  transition:box-shadow .2s ease, border-color .2s ease;
+}
+.stub.open{box-shadow:var(--shadow-2); border-color:#e3d3da;}
+.stub.locked .stub-head{cursor:not-allowed; opacity:0.55;}
+.stub-head{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:18px 22px;
+  background:none;
+  border:none;
+  text-align:left;
+  cursor:pointer;
+}
+.stub-num{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--cream);
+  border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono); font-weight:600; font-size:13px; color:var(--muted);
+  flex:none;
+  transition:all .2s ease;
+}
+.stub.complete .stub-num{background:var(--success); border-color:var(--success); color:#fff;}
+.stub.open .stub-num{background:var(--maroon); border-color:var(--maroon); color:#fff;}
+.stub-titlewrap{flex:1; min-width:0;}
+.stub-title{font-family:var(--display); font-weight:600; font-size:16.5px;}
+.stub-summary{
+  font-size:13px; color:var(--muted); margin-top:2px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.stub-summary strong{color:var(--maroon-deep); font-weight:600;}
+.stub-chev{
+  width:22px;height:22px; flex:none; color:var(--faint);
+  transition:transform .2s ease;
+}
+.stub.open .stub-chev{transform:rotate(180deg); color:var(--maroon);}
+.stub-body{
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .32s ease;
+}
+.stub.open .stub-body{max-height:2400px;}
+.stub-body-inner{padding:2px 22px 26px; border-top:1px solid var(--border); padding-top:20px;}
+
+/* option cards (test type / format / writing format) */
+.optgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
+@media (max-width:760px){ .optgrid{grid-template-columns:1fr;} }
+.optcard{
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-md);
+  padding:16px 16px 18px;
+  cursor:pointer;
+  background:var(--surface-2);
+  transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  position:relative;
+}
+.optcard:hover{border-color:#dcc3ce; transform:translateY(-1px);}
+.optcard.selected{border-color:var(--maroon); background:var(--maroon-tint);}
+.optcard-icon{
+  width:34px;height:34px; border-radius:9px;
+  background:var(--surface); border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:10px; color:var(--maroon);
+}
+.optcard.selected .optcard-icon{background:var(--maroon); border-color:var(--maroon); color:#fff;}
+.optcard-title{font-weight:600; font-size:14.5px; margin-bottom:5px; display:flex; align-items:center; gap:8px;}
+.optcard-desc{font-size:12.8px; color:var(--muted); line-height:1.55;}
+.badge{
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:10.5px; font-weight:700; letter-spacing:0.02em;
+  color:var(--success); background:var(--success-bg);
+  padding:3px 8px; border-radius:999px;
+  margin-top:10px;
+}
+.badge svg{width:10px;height:10px;}
+.optcard-check{
+  position:absolute; top:14px; right:14px;
+  width:18px;height:18px; border-radius:50%;
+  border:1.5px solid var(--border); background:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+.optcard.selected .optcard-check{background:var(--maroon); border-color:var(--maroon); color:#fff;}
+.optcard-check svg{width:11px;height:11px; opacity:0;}
+.optcard.selected .optcard-check svg{opacity:1;}
+
+.helper-link{
+  font-size:13px; color:var(--maroon); font-weight:600; text-decoration:underline;
+  display:inline-flex; align-items:center; gap:5px; margin-bottom:16px;
+}
+.helper-link svg{width:12px;height:12px;}
+
+.subblock{
+  margin-top:18px; padding-top:18px; border-top:1px dashed var(--border);
+}
+.subblock-label{font-size:12.5px; color:var(--muted); margin-bottom:12px;}
+
+.note-inline{font-size:12.5px; color:var(--muted); margin-top:14px; line-height:1.6;}
+
+/* location step */
+.formrow{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media (max-width:600px){ .formrow{grid-template-columns:1fr;} }
+.field{display:flex; flex-direction:column; gap:6px;}
+.field label{font-size:12.5px; font-weight:600; color:var(--muted);}
+.field select, .field input{
+  font-family:var(--sans); font-size:14.5px; color:var(--ink);
+  padding:11px 13px; border-radius:var(--radius-sm); border:1.5px solid var(--border);
+  background:var(--surface); appearance:none;
+}
+.field.has-select{position:relative;}
+.field.has-select::after{
+  content:""; position:absolute; right:14px; bottom:14px;
+  width:9px; height:9px; border-right:2px solid var(--muted); border-bottom:2px solid var(--muted);
+  transform:rotate(45deg); pointer-events:none;
+}
+.field select:focus, .field input:focus{border-color:var(--maroon); outline:none;}
+
+.banner{
+  display:flex; gap:12px; align-items:flex-start;
+  padding:14px 16px; border-radius:var(--radius-md); font-size:13px; line-height:1.55;
+  margin-top:18px;
+}
+.banner svg{width:18px;height:18px; flex:none; margin-top:1px;}
+.banner.warn{background:var(--warn-bg); color:var(--warn-text);}
+.banner.info{background:var(--info-bg); color:var(--info-text);}
+.banner a{font-weight:700; text-decoration:underline; white-space:nowrap;}
+
+/* calendar */
+.cal-wrap{display:grid; grid-template-columns:1fr 1fr; gap:26px; margin-top:6px;}
+@media (max-width:700px){ .cal-wrap{grid-template-columns:1fr;} }
+.cal-month-head{
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;
+}
+.cal-month-head h3{font-size:15px; font-weight:600;}
+.cal-nav{
+  width:26px;height:26px; border-radius:50%; border:1.5px solid var(--border); background:#fff;
+  display:flex;align-items:center;justify-content:center; cursor:pointer; color:var(--muted);
+}
+.cal-nav svg{width:12px;height:12px;}
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+.cal-dow{font-size:11px; text-align:center; color:var(--faint); font-weight:600; padding:4px 0;}
+.cal-day{
+  aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+  font-size:12.8px; border-radius:8px; cursor:pointer; color:var(--ink);
+  background:transparent;
+}
+.cal-day.disabled{color:var(--faint); text-decoration:line-through; cursor:not-allowed;}
+.cal-day.enabled:hover{background:var(--maroon-tint);}
+.cal-day.selected{background:var(--maroon); color:#fff; font-weight:700;}
+.cal-day.empty{visibility:hidden;}
+
+/* buttons */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-weight:700; font-size:14px; padding:12px 22px; border-radius:999px;
+  border:none; cursor:pointer; transition:transform .1s ease, box-shadow .15s ease, background .15s ease;
+  font-family:var(--sans);
+}
+.btn:active{transform:scale(0.98);}
+.btn-primary{background:var(--maroon); color:#fff; box-shadow:0 6px 16px -6px rgba(166,9,61,0.55);}
+.btn-primary:hover{background:#8f0834;}
+.btn-primary:disabled{background:#e3c9d2; color:#fff; cursor:not-allowed; box-shadow:none;}
+.btn-ghost{background:transparent; color:var(--maroon); border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--maroon);}
+.btn-block{width:100%;}
+.btn-sm{padding:9px 16px; font-size:13px;}
+
+.step-actions{display:flex; justify-content:flex-end; margin-top:20px;}
+
+/* ---------------- results section ---------------- */
+.results-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-1); padding:22px; margin-top:16px;
+}
+.results-toolbar{
+  display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px;
+}
+.results-toolbar h3{font-size:17px; font-weight:700;}
+.toolbar-controls{display:flex; gap:8px; flex-wrap:wrap;}
+.chipbtn{
+  display:inline-flex; align-items:center; gap:7px;
+  border:1.5px solid var(--border); background:#fff; border-radius:999px;
+  padding:8px 14px; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer;
+}
+.chipbtn svg{width:13px;height:13px;}
+.chipbtn:hover{border-color:var(--maroon);}
+.chipbtn.active{border-color:var(--maroon); color:var(--maroon); background:var(--maroon-tint);}
+
+.results-count{display:flex; align-items:center; justify-content:space-between; margin:14px 0 14px; font-size:13px; color:var(--muted);}
+.results-count strong{color:var(--ink);}
+.sortsel{border:1.5px solid var(--border); border-radius:999px; padding:8px 12px; font-size:12.5px; font-family:inherit; background:#fff;}
+
+.session-list{display:flex; flex-direction:column; gap:12px;}
+.session-card{
+  display:flex; gap:16px; border:1.5px solid var(--border); border-radius:var(--radius-md);
+  padding:16px; align-items:stretch; transition:border-color .15s ease;
+}
+.session-card:hover{border-color:#dcc3ce;}
+.session-date{
+  background:var(--maroon-deep); color:#fff; border-radius:10px;
+  padding:12px 16px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-width:78px; font-family:var(--mono);
+}
+.session-date .dow{font-size:11px; opacity:0.85;}
+.session-date .dd{font-size:22px; font-weight:700; line-height:1.1;}
+.session-date .mon{font-size:11px; opacity:0.85;}
+.session-main{flex:1; min-width:0;}
+.session-top{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+.session-title{font-weight:700; font-size:15px;}
+.session-loc{display:flex; align-items:center; gap:6px; font-size:12.8px; color:var(--muted); margin-top:4px;}
+.session-loc svg{width:13px;height:13px;}
+.session-price-wrap{text-align:right;}
+.session-time{font-family:var(--mono); font-weight:600; font-size:15px;}
+.seats{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--success); font-weight:600; margin-top:3px; justify-content:flex-end;}
+.seats svg{width:13px;height:13px;}
+.session-meta{display:flex; flex-wrap:wrap; gap:14px; margin-top:12px; font-size:12.3px; color:var(--muted);}
+.session-meta span{display:flex; align-items:center; gap:6px;}
+.session-meta svg{width:14px;height:14px; flex:none;}
+.session-bottom{display:flex; align-items:center; justify-content:space-between; margin-top:12px; gap:12px; flex-wrap:wrap;}
+.pill-tag{
+  font-size:11px; font-weight:600; color:var(--gold); background:var(--gold-tint);
+  padding:4px 10px; border-radius:999px;
+}
+.session-price{font-family:var(--mono); font-weight:700; font-size:15px;}
+
+/* ---------------- two column layout (pages 2 & 3) ---------------- */
+.split{display:grid; grid-template-columns:1fr 360px; gap:26px; align-items:start;}
+@media (max-width:900px){ .split{grid-template-columns:1fr;} }
+.col-main{display:flex; flex-direction:column; gap:16px;}
+
+.card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-1); padding:22px 24px;
+}
+.card h2{font-size:17px; font-weight:700; margin-bottom:4px;}
+.card .card-sub{font-size:13px; color:var(--muted); margin-bottom:16px;}
+
+/* radio rows (who is booking / payment method) */
+.radiorow{
+  display:flex; align-items:center; gap:14px; border:1.5px solid var(--border); border-radius:var(--radius-md);
+  padding:15px 16px; cursor:pointer; margin-bottom:10px; transition:border-color .15s ease, background .15s ease;
+}
+.radiorow:hover{border-color:#dcc3ce;}
+.radiorow.selected{border-color:var(--maroon); background:var(--maroon-tint);}
+.radio-dot{
+  width:20px;height:20px; border-radius:50%; border:1.5px solid var(--border); flex:none;
+  display:flex; align-items:center; justify-content:center; background:#fff;
+}
+.radio-dot::after{content:""; width:9px; height:9px; border-radius:50%; background:var(--maroon); opacity:0; transform:scale(0.4); transition:all .12s ease;}
+.radiorow.selected .radio-dot{border-color:var(--maroon);}
+.radiorow.selected .radio-dot::after{opacity:1; transform:scale(1);}
+.radiorow-title{font-weight:600; font-size:14.5px;}
+.radiorow-desc{font-size:12.5px; color:var(--muted); margin-top:2px;}
+.radiorow-icon{width:34px;height:34px; border-radius:9px; background:var(--cream); display:flex;align-items:center;justify-content:center; color:var(--maroon); flex:none;}
+.radiorow-icon svg{width:17px;height:17px;}
+
+/* account sign-in */
+.inputgroup{position:relative; margin-bottom:6px;}
+.inputgroup input{
+  width:100%; font-size:14.5px; padding:13px 46px 13px 14px; border-radius:var(--radius-sm);
+  border:1.5px solid var(--border); background:var(--surface);
+}
+.inputgroup input:focus{border-color:var(--maroon); outline:none;}
+.inputgroup .go-btn{
+  position:absolute; right:6px; top:6px; bottom:6px; width:38px; border-radius:8px;
+  background:var(--maroon); border:none; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.inputgroup .go-btn svg{width:15px;height:15px;}
+.eye-btn{
+  position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--muted);
+}
+.eye-btn svg{width:18px;height:18px;}
+.field-error{color:var(--maroon); font-size:12px; margin-top:6px; display:none;}
+.mini-link{font-size:12.5px; color:var(--maroon); font-weight:600; text-decoration:underline; cursor:pointer;}
+.signin-welcome{margin-bottom:14px;}
+.signin-welcome h3{font-size:16px; font-weight:700;}
+.signin-welcome p{font-size:12.8px; color:var(--muted); margin-top:3px;}
+.signedin-chip{
+  display:inline-flex; align-items:center; gap:8px; background:var(--success-bg); color:var(--success);
+  padding:8px 14px; border-radius:999px; font-size:13px; font-weight:600;
+}
+.signedin-chip svg{width:15px;height:15px;}
+
+/* profile grid (page 3) */
+.profile-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px 24px;}
+@media (max-width:560px){ .profile-grid{grid-template-columns:1fr;} }
+.profile-item label{display:block; font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:5px;}
+.profile-item .value{font-size:14.5px; font-weight:500;}
+.profile-item input{width:100%; font-size:14.5px; padding:9px 10px; border:1.5px solid var(--maroon); border-radius:8px; font-family:inherit;}
+.verified-tag{
+  display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:var(--success);
+  background:var(--success-bg); padding:2px 8px; border-radius:999px; margin-left:8px;
+}
+.card-headrow{display:flex; align-items:center; justify-content:space-between;}
+
+/* payment card visual */
+.paycard{
+  border-radius:16px; padding:22px;
+  background:linear-gradient(135deg,#2b1130,#7d1245 55%, #b8863b 130%);
+  color:#fff; margin-top:16px; position:relative; overflow:hidden;
+}
+.paycard::after{
+  content:""; position:absolute; inset:0;
+  background:radial-gradient(circle at 85% 20%, rgba(255,255,255,0.16), transparent 55%);
+}
+.paycard-row{position:relative; display:flex; justify-content:flex-end; margin-bottom:30px;}
+.paycard-row svg{width:30px;height:22px; opacity:0.9;}
+.paycard input{
+  width:100%; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.35);
+  color:#fff; border-radius:9px; padding:12px 13px; font-family:var(--mono); font-size:14px; margin-bottom:12px;
+}
+.paycard input::placeholder{color:rgba(255,255,255,0.65);}
+.paycard-cols{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; position:relative;}
+.paycard-cols .cvv-wrap{position:relative;}
+.paycard-cols .cvv-wrap svg{position:absolute; right:10px; top:14px; width:14px; height:14px; opacity:0.75;}
+.pay-note{font-size:12px; color:var(--muted); margin-top:14px; margin-bottom:2px;}
+.pay-btn-wrap{margin-top:16px;}
+
+/* booking summary sidebar (signature: boarding-pass stub) */
+.pass{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-2); overflow:hidden; position:sticky; top:86px;
+}
+.pass-top{padding:20px 22px 16px; background:var(--maroon-deep); color:#fff;}
+.pass-top .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:0.1em; opacity:0.75; text-transform:uppercase;}
+.pass-top h3{font-size:16px; font-weight:700; margin-top:4px;}
+.pass-seg{padding:16px 22px; border-bottom:1px dashed var(--border); display:flex; gap:12px;}
+.pass-seg:last-of-type{border-bottom:none;}
+.pass-date{
+  background:var(--cream); border-radius:8px; padding:8px 10px; text-align:center; min-width:52px; flex:none;
+  font-family:var(--mono);
+}
+.pass-date .dd{font-weight:700; font-size:16px; line-height:1;}
+.pass-date .mon{font-size:10px; color:var(--muted);}
+.pass-seg-body{flex:1;}
+.pass-seg-title{font-weight:600; font-size:13.5px;}
+.pass-seg-meta{font-size:12px; color:var(--muted); margin-top:3px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+.pass-seg-meta svg{width:12px;height:12px;}
+.pass-change{font-size:11.5px; color:var(--maroon); font-weight:700; text-decoration:underline; cursor:pointer; white-space:nowrap;}
+.pass-seg-head{display:flex; justify-content:space-between; align-items:flex-start; width:100%; gap:8px;}
+.best-tag{font-size:10px; font-weight:700; color:var(--success); background:var(--success-bg); padding:2px 7px; border-radius:999px;}
+
+.perforation{
+  height:0; border-top:2px dashed var(--border); position:relative; margin:0 0;
+}
+.perforation::before, .perforation::after{
+  content:""; position:absolute; top:-9px; width:18px; height:18px; border-radius:50%; background:var(--cream);
+  border:1px solid var(--border);
+}
+.perforation::before{left:-9px;}
+.perforation::after{right:-9px;}
+
+.promo{
+  margin:16px 22px; padding:14px 16px; background:var(--gold-tint); border-radius:var(--radius-md);
+  display:flex; gap:12px;
+}
+.promo svg{width:20px;height:20px; color:var(--gold); flex:none;}
+.promo-title{font-size:12.8px; font-weight:700; color:#6b4e1e; margin-bottom:6px;}
+.promo ul{margin:0; padding-left:16px; font-size:11.8px; color:#6b4e1e; line-height:1.75;}
+
+.pass-payment{padding:14px 22px 20px;}
+.pass-payment-row{display:flex; justify-content:space-between; font-size:12.8px; padding:5px 0; color:var(--muted);}
+.pass-payment-row.total{color:var(--ink); font-weight:700; font-size:14.5px; border-top:1px solid var(--border); margin-top:6px; padding-top:10px;}
+.pass-payment-row .amt{font-family:var(--mono);}
+
+/* success state */
+.success-panel{
+  text-align:center; padding:50px 30px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); box-shadow:var(--shadow-1);
+}
+.success-icon{
+  width:64px;height:64px; border-radius:50%; background:var(--success-bg); color:var(--success);
+  display:flex; align-items:center; justify-content:center; margin:0 auto 18px;
+}
+.success-icon svg{width:30px;height:30px;}
+.success-panel h2{font-size:22px; margin-bottom:8px;}
+.success-panel p{color:var(--muted); font-size:14px; max-width:44ch; margin:0 auto;}
+.success-ref{
+  font-family:var(--mono); font-size:13px; background:var(--cream); display:inline-block; padding:8px 16px;
+  border-radius:999px; margin-top:18px; letter-spacing:0.04em;
+}
+.success-actions{display:flex; gap:12px; justify-content:center; margin-top:24px; flex-wrap:wrap;}
+
+/* misc utility */
+.hidden{display:none !important;}
+.spinner{
+  width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.4); border-top-color:#fff;
+  animation:spin .7s linear infinite;
+}
+@media (prefers-reduced-motion:reduce){ .spinner{animation:none;} }
+@keyframes spin{to{transform:rotate(360deg);}}
+
+footer.pagefoot{
+  max-width:1180px; margin:0 auto; padding:0 155px 5px; font-size:11.5px; color:var(--faint); font-family:var(--mono); border-top: 2px solid var(--border);
+}
+</style>
+</head>
+<body>
+
+<!-- ============ BRAND / PROGRESS BAR ============ -->
+<div class="brandbar">
+  <div class="brandbar-inner">
+    <div class="brandmark">
+      <span class="ielts"><img src="images/logo.png" alt="IDP IELTS" width="180" height="40"></span>
+    </div>
+    <nav class="stagebar" aria-label="Booking progress">
+      <button class="stage" id="stage-1" data-page="1"><span class="num">1</span>Find your test</button>
+      <span class="stage-sep"></span>
+      <button class="stage" id="stage-2" data-page="2"><span class="num">2</span>Confirm &amp; sign in</button>
+      <span class="stage-sep"></span>
+      <button class="stage" id="stage-3" data-page="3"><span class="num">3</span>Review &amp; pay</button>
+    </nav>
+  </div>
+</div>
+
+<!-- condensed selection summary bar, shown on pages 2 & 3 -->
+<div class="selectionbar hidden" id="selectionbar">
+  <div class="selectionbar-inner">
+    <div class="selectionbar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      <span id="sb-type">—</span>
+    </div>
+    <div class="selectionbar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>
+      <span id="sb-format">—</span>
+    </div>
+    <div class="selectionbar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      <span id="sb-loc">—</span>
+    </div>
+    <div class="selectionbar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      <span id="sb-date">—</span>
+    </div>
+    <button class="selectionbar-edit" id="sb-edit">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+      Edit
+    </button>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div class="app">
+
+  <!-- ============ PAGE 1 — FIND YOUR TEST ============ -->
+  <section class="page active" id="page-1">
+    <div class="page-head">
+      <span class="page-eyebrow">Step 1 of 3</span>
+      <h1>Find an IELTS test session</h1>
+      <p>Choose your test type, format, location and test date.</p>
+    </div>
+
+    <div class="stubs">
+
+      <!-- STUB 1: test type -->
+      <div class="stub open" id="stub-type">
+        <button class="stub-head" data-stub="type">
+          <span class="stub-num">1</span>
+          <span class="stub-titlewrap">
+            <span class="stub-title">Which IELTS test do you need?</span>
+            <span class="stub-summary" id="summary-type">Choosing the right IELTS test depends on your goals. Make sure you select the correct test before booking.</span>
+          </span>
+          <svg class="stub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="stub-body">
+          <div class="stub-body-inner">
+            <a class="helper-link" href="#" onclick="return false;">
+              Check who accepts IELTS here
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17L17 7M8 7h9v9"/></svg>
+            </a>
+            <div class="optgrid">
+              <div class="optcard" data-group="type" data-value="academic">
+                <span class="optcard-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+                <div class="optcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/></svg></div>
+                <div class="optcard-title">IELTS Academic</div>
+                <div class="optcard-desc">For people applying to universities or professional registration. Focuses on English used in an academic context.</div>
+              </div>
+              <div class="optcard" data-group="type" data-value="general">
+                <span class="optcard-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+                <div class="optcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+                <div class="optcard-title">IELTS General Training</div>
+                <div class="optcard-desc">For migration and everyday use in an English-speaking environment. Focuses on practical, real-life English skills.</div>
+              </div>
+              <div class="optcard" data-group="type" data-value="ukvi">
+                <span class="optcard-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+                <div class="optcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4v16M4 5h15l-3 4 3 4H4"/></svg></div>
+                <div class="optcard-title">IELTS for UKVI</div>
+                <div class="optcard-desc">Required if you plan to study, work, or live in the UK and need a visa. You must choose the correct UKVI test.</div>
+              </div>
+            </div>
+            <div class="step-actions">
+              <button class="btn btn-primary" id="continue-type" disabled>Continue</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STUB 2: format -->
+      <div class="stub locked" id="stub-format">
+        <button class="stub-head" data-stub="format">
+          <span class="stub-num">2</span>
+          <span class="stub-titlewrap">
+            <span class="stub-title">Select your test and writing format</span>
+            <span class="stub-summary" id="summary-format">Choose the format that works best for you.</span>
+          </span>
+          <svg class="stub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="stub-body">
+          <div class="stub-body-inner">
+            <div class="optgrid" style="grid-template-columns:1fr 1fr;">
+              <div class="optcard" data-group="format" data-value="paper">
+                <span class="optcard-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+                <div class="optcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/></svg></div>
+                <div class="optcard-title">IELTS on Paper</div>
+                <div class="optcard-desc">Complete Listening, Reading and Writing on paper at a test centre. Speaking is face to face with an examiner.</div>
+              </div>
+              <div class="optcard" data-group="format" data-value="computer">
+                <span class="optcard-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+                <div class="optcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg></div>
+                <div class="optcard-title">IELTS on Computer</div>
+                <div class="optcard-desc">Complete Listening and Reading on a computer. Choose computer or paper for Writing. Speaking is face-to-face or by video call.</div>
+                <span class="badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 11-14h-7z"/></svg>Fastest results</span>
+              </div>
+            </div>
+
+            <!-- writing sub-format, only relevant for General Training + Computer -->
+            <div class="subblock hidden" id="writing-subblock">
+              <div class="subblock-label">Choose how you complete the Writing test at a test centre.</div>
+              <div class="optgrid" style="grid-template-columns:1fr 1fr;">
+                <div class="optcard" data-group="writing" data-value="paper">
+                  <span class="optcard-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+                  <div class="optcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20l4-1 10-10-3-3L5 16l-1 4z"/></svg></div>
+                  <div class="optcard-title">Writing on Paper</div>
+                  <div class="optcard-desc">Complete Writing using pen and paper. Reading and Listening are taken on a computer.</div>
+                </div>
+                <div class="optcard" data-group="writing" data-value="computer">
+                  <span class="optcard-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+                  <div class="optcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M9 10h.01M12 10h.01"/></svg></div>
+                  <div class="optcard-title">Writing on Computer</div>
+                  <div class="optcard-desc">Complete the full Writing test on a computer at a test centre.</div>
+                  <span class="badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 11-14h-7z"/></svg>Fastest results</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="step-actions">
+              <button class="btn btn-primary" id="continue-format" disabled>Continue</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STUB 3: location -->
+      <div class="stub locked" id="stub-location">
+        <button class="stub-head" data-stub="location">
+          <span class="stub-num">3</span>
+          <span class="stub-titlewrap">
+            <span class="stub-title">Select your location</span>
+            <span class="stub-summary" id="summary-location">Select your country and city to find a test centre.</span>
+          </span>
+          <svg class="stub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="stub-body">
+          <div class="stub-body-inner">
+            <div class="formrow">
+              <div class="field has-select">
+                <label for="sel-country">Country</label>
+                <select id="sel-country">
+                  <option>Australia</option>
+                  <option>India</option>
+                  <option>United Kingdom</option>
+                  <option>Canada</option>
+                </select>
+              </div>
+              <div class="field has-select">
+                <label for="sel-city">City</label>
+                <select id="sel-city">
+                  <option>Brisbane</option>
+                  <option>Sydney</option>
+                  <option>Melbourne</option>
+                  <option>Perth</option>
+                </select>
+              </div>
+            </div>
+            <div class="banner warn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <span>If your country or city location is not available, please check if you are eligible for an IELTS Online test. <a href="#" onclick="return false;">Explore IELTS Online ↗</a></span>
+            </div>
+            <div class="step-actions">
+              <button class="btn btn-primary" id="continue-location">Continue</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STUB 4: date -->
+      <div class="stub locked" id="stub-date">
+        <button class="stub-head" data-stub="date">
+          <span class="stub-num">4</span>
+          <span class="stub-titlewrap">
+            <span class="stub-title">Select a test date</span>
+            <span class="stub-summary" id="summary-date">You may search for dates up to 6 months in advance.</span>
+          </span>
+          <svg class="stub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="stub-body">
+          <div class="stub-body-inner">
+            <div class="cal-wrap" id="cal-wrap"></div>
+            <div class="step-actions">
+              <button class="btn btn-primary" id="continue-date" disabled>Search sessions</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STUB 5: results -->
+      <div class="stub locked" id="stub-results">
+        <button class="stub-head" data-stub="results">
+          <span class="stub-num">5</span>
+          <span class="stub-titlewrap">
+            <span class="stub-title">Available sessions</span>
+            <span class="stub-summary" id="summary-results">Session results will appear once your search is complete.</span>
+          </span>
+          <svg class="stub-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="stub-body">
+          <div class="stub-body-inner">
+            <div class="banner info">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <span>Need help with your IELTS test? <a href="#" onclick="return false;">Learn more ↗</a></span>
+            </div>
+            <div class="results-toolbar">
+              <div class="toolbar-controls">
+                <button class="chipbtn">All test centres <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+                <button class="chipbtn" id="filter-toggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filter</button>
+                <button class="chipbtn" id="map-toggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/></svg>Map view</button>
+              </div>
+            </div>
+            <div class="results-count">
+              <span>Displaying <strong id="session-count">3</strong> test session(s)</span>
+              <select class="sortsel"><option>Earliest date</option><option>Lowest price</option></select>
+            </div>
+            <div class="session-list" id="session-list"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ PAGE 2 — CONFIRM & SIGN IN ============ -->
+  <section class="page" id="page-2">
+    <div class="page-head">
+      <span class="page-eyebrow">Step 2 of 3</span>
+      <h1>Confirm &amp; sign in</h1>
+      <p>Review your session, tell us who's testing, and sign in to your IDP account — combining what used to be four separate screens.</p>
+    </div>
+
+    <div class="split">
+      <div class="col-main">
+
+        <div class="card">
+          <div class="card-headrow">
+            <h2 id="p2-test-title">IELTS General Training</h2>
+          </div>
+          <div class="card-sub">Your selected session — change anything before you continue.</div>
+          <div class="pass-seg" style="border:1.5px solid var(--border); border-radius:12px; margin-bottom:10px;">
+            <div class="pass-date"><span class="dd" id="p2-day1">24</span><span class="mon" id="p2-mon1">Aug</span></div>
+            <div class="pass-seg-body">
+              <div class="pass-seg-head">
+                <div>
+                  <div class="pass-seg-title">Listening, Reading, Writing</div>
+                  <div class="pass-seg-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/></svg><span id="p2-loc1">IDP IELTS Australia – Brisbane</span></div>
+                  <div class="pass-seg-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="p2-time1">9:00 AM</span></div>
+                </div>
+                <span class="pass-change" data-goto-results="1">Change</span>
+              </div>
+            </div>
+          </div>
+          <div class="pass-seg" style="border:1.5px solid var(--border); border-radius:12px;">
+            <div class="pass-date"><span class="dd" id="p2-day2">24</span><span class="mon" id="p2-mon2">Aug</span></div>
+            <div class="pass-seg-body">
+              <div class="pass-seg-head">
+                <div>
+                  <div class="pass-seg-title">Speaking <span class="best-tag">Best available</span></div>
+                  <div class="pass-seg-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/></svg><span id="p2-loc2">IDP IELTS Australia – Brisbane</span></div>
+                  <div class="pass-seg-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="p2-time2">2:20 PM</span></div>
+                </div>
+                <span class="pass-change" data-goto-results="1">Change</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Who is this test booking for?</h2>
+          <div class="card-sub">Select an option to continue.</div>
+          <div class="radiorow" data-group="bookingfor" data-value="self">
+            <span class="radio-dot"></span>
+            <div class="radiorow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+            <div>
+              <div class="radiorow-title">I'm booking for myself (I am 18 or older)</div>
+            </div>
+          </div>
+          <div class="radiorow" data-group="bookingfor" data-value="other">
+            <span class="radio-dot"></span>
+            <div class="radiorow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.6"/><path d="M2 20c0-3.3 2.9-5.5 6-5.5s6 2.2 6 5.5M14.5 14.8c2.6.2 4.5 2.1 4.5 5.2"/></svg></div>
+            <div>
+              <div class="radiorow-title">I'm booking on behalf of someone else</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="account-card">
+          <h2>Sign in to IDP IELTS</h2>
+          <div class="banner info" style="margin-top:0; margin-bottom:16px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span>If you have previously created an account for an IELTS test or another IDP service, sign in with the same email. Forgotten it? <a href="#" onclick="return false;">Check your results here</a>.</span>
+          </div>
+
+          <div id="signin-step-email">
+            <div class="signin-welcome"><h3>Welcome to IDP IELTS</h3><p>Please enter your email to sign in or sign up</p></div>
+            <div class="inputgroup">
+              <input type="email" id="email-input" placeholder="Email address" />
+              <button class="go-btn" id="email-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            </div>
+          </div>
+
+          <div id="signin-step-password" class="hidden">
+            <div class="signin-welcome"><h3>Welcome back</h3><p>Please enter your password to sign in</p></div>
+            <div class="inputgroup">
+              <input type="password" id="password-input" placeholder="Password" value="········" />
+              <button class="eye-btn" id="eye-toggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+            <div style="text-align:right; margin-bottom:16px;"><span class="mini-link">Forgot password?</span></div>
+            <button class="btn btn-primary btn-block" id="signin-btn">Sign in</button>
+          </div>
+
+          <div id="signin-step-done" class="hidden">
+            <span class="signedin-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Signed in as <span id="signedin-email"></span></span>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="btn btn-primary" id="continue-to-review" disabled>Continue to review &amp; pay</button>
+        </div>
+      </div>
+
+      <div id="pass-sidebar-2"></div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 3 — REVIEW & PAY ============ -->
+  <section class="page" id="page-3">
+    <div class="page-head">
+      <span class="page-eyebrow">Step 3 of 3</span>
+      <h1>Review &amp; pay</h1>
+      <p>Check your profile, choose a payment method and complete your booking — this replaces the profile, payment-method and card screens.</p>
+    </div>
+
+    <div class="split" id="page3-live">
+      <div class="col-main">
+
+        <div class="card">
+          <div class="card-headrow">
+            <h2>IELTS profile</h2>
+            <span class="mini-link" id="profile-edit-toggle">Edit</span>
+          </div>
+          <div class="card-sub">This information appears on your test-day ID check.</div>
+          <div class="profile-grid" id="profile-grid">
+            <div class="profile-item"><label>Title</label><span class="value" data-field="title">Mr</span></div>
+            <div class="profile-item"><label>Gender</label><span class="value" data-field="gender">Male</span></div>
+            <div class="profile-item"><label>First name</label><span class="value" data-field="first">Thiyagu's</span></div>
+            <div class="profile-item"><label>Family name</label><span class="value" data-field="family">Govindaraj</span></div>
+            <div class="profile-item"><label>Date of birth</label><span class="value" data-field="dob">01/07/2006</span></div>
+            <div class="profile-item"><label>First language</label><span class="value" data-field="lang">Tamil</span></div>
+            <div class="profile-item"><label>Email</label><span class="value" data-field="email">thiyagu.govindaraj@idp.com<span class="verified-tag"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg>Verified</span></span></div>
+            <div class="profile-item"><label>Mobile</label><span class="value" data-field="mobile">+91 9444573203</span></div>
+            <div class="profile-item"><label>Level of education</label><span class="value" data-field="edu">Post graduate</span></div>
+            <div class="profile-item"><label>Years studying English</label><span class="value" data-field="years">5 years</span></div>
+          </div>
+        </div>
+
+        <div class="card" id="payment-card">
+          <h2>How would you like to pay?</h2>
+          <div class="card-sub">Select a method to see payment details.</div>
+
+          <div class="radiorow" id="pay-online-row" data-group="paymode" data-value="online">
+            <span class="radio-dot"></span>
+            <div class="radiorow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+            <div><div class="radiorow-title">Pay online</div></div>
+          </div>
+
+          <div id="paymethod-block" class="hidden subblock">
+            <div class="subblock-label">Select your payment method</div>
+            <div class="radiorow selected" data-group="paycard" data-value="braintree">
+              <span class="radio-dot"></span>
+              <div class="radiorow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+              <div>
+                <div class="radiorow-title">Credit / Debit card using Braintree</div>
+                <div class="radiorow-desc">Secure online payments via Braintree</div>
+              </div>
+            </div>
+            <p class="pay-note">Note: We accept Visa and Mastercard only.</p>
+
+            <div class="paycard">
+              <div class="paycard-row"><svg viewBox="0 0 32 22" fill="none"><rect width="32" height="22" rx="3" fill="rgba(255,255,255,0.25)"/><rect y="6" width="32" height="4" fill="rgba(255,255,255,0.5)"/></svg></div>
+              <input type="text" placeholder="Credit card number" id="cc-number" />
+              <div class="paycard-cols">
+                <input type="text" placeholder="MM" id="cc-mm" />
+                <input type="text" placeholder="YY" id="cc-yy" />
+                <div class="cvv-wrap">
+                  <input type="text" placeholder="CVV" id="cc-cvv" />
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+                </div>
+              </div>
+              <input type="text" placeholder="Name" id="cc-name" style="margin-top:10px;" />
+            </div>
+
+            <div class="pay-btn-wrap">
+              <button class="btn btn-primary btn-block" id="pay-btn">
+                <span id="pay-btn-label">Pay <span id="pay-amount">$490.00</span> AUD</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="pass-sidebar-3"></div>
+    </div>
+
+    <!-- success state, replaces the live view once payment completes -->
+    <div class="success-panel hidden" id="success-panel">
+      <div class="success-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+      <h2>Booking complete</h2>
+      <p>Your IELTS test is booked. A confirmation has been sent to <span id="success-email">your email</span> with everything you need for test day.</p>
+      <div class="success-ref">Booking ref — <span id="success-ref"></span></div>
+      <div class="success-actions">
+        <button class="btn btn-ghost">Add to calendar</button>
+        <button class="btn btn-primary" id="success-done">Done</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="pagefoot">REDESIGN PROTOTYPE · 14 ORIGINAL SCREENS CONSOLIDATED INTO 3 PAGES · ALL FIELDS ARE DEMO STATE, NO DATA IS SUBMITTED<br><br>
+By booking an IELTS test with IDP, you are agreeing to the Terms & Conditions and Privacy Policy.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var state = {
+    page:1,
+    type:null, typeLabel:null,
+    format:null, formatLabel:null,
+    writing:null, writingLabel:null,
+    country:'Australia', city:'Brisbane',
+    calMonth:0, // 0 = Aug 2026, 1 = Sep 2026 (matches source screenshots)
+    selectedDate:null,
+    session:null,
+    bookingFor:null,
+    signedIn:false, email:null,
+    paymode:null,
+    paid:false
+  };
+
+  var TYPE_LABELS = {academic:'IELTS Academic', general:'IELTS General Training', ukvi:'IELTS for UKVI'};
+  var FORMAT_LABELS = {paper:'On Paper', computer:'On Computer'};
+  var WRITING_LABELS = {paper:'Writing on Paper', computer:'Writing on Computer'};
+
+  /* ---------- utility ---------- */
+  function $(sel, ctx){ return (ctx||document).querySelector(sel); }
+  function $all(sel, ctx){ return Array.prototype.slice.call((ctx||document).querySelectorAll(sel)); }
+
+  /* ---------- accordion (page 1) ---------- */
+  var stubOrder = ['type','format','location','date','results'];
+
+  function openStub(name){
+    stubOrder.forEach(function(n){
+      var el = $('#stub-'+n);
+      if(!el) return;
+      if(n === name){ el.classList.add('open'); }
+      else { el.classList.remove('open'); }
+    });
+  }
+
+  function unlockStub(name){
+    var el = $('#stub-'+name);
+    if(el) el.classList.remove('locked');
+  }
+
+  function completeStub(name, summaryHTML){
+    var el = $('#stub-'+name);
+    if(!el) return;
+    el.classList.add('complete');
+    var s = $('#summary-'+name);
+    if(s) s.innerHTML = summaryHTML;
+  }
+
+  $all('.stub-head').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var stub = btn.closest('.stub');
+      if(stub.classList.contains('locked')) return;
+      var name = btn.getAttribute('data-stub');
+      if(stub.classList.contains('open')){
+        stub.classList.remove('open');
+      } else {
+        openStub(name);
+      }
+    });
+  });
+
+  /* ---------- option card selection (generic) ---------- */
+  function wireOptionGroup(groupName, onSelect){
+    $all('.optcard[data-group="'+groupName+'"]').forEach(function(card){
+      card.addEventListener('click', function(){
+        $all('.optcard[data-group="'+groupName+'"]').forEach(function(c){ c.classList.remove('selected'); });
+        card.classList.add('selected');
+        onSelect(card.getAttribute('data-value'));
+      });
+    });
+  }
+
+  wireOptionGroup('type', function(val){
+    state.type = val; state.typeLabel = TYPE_LABELS[val];
+    $('#continue-type').disabled = false;
+  });
+
+  $('#continue-type').addEventListener('click', function(){
+    completeStub('type', 'Selected: <strong>'+state.typeLabel+'</strong>');
+    unlockStub('format');
+    openStub('format');
+  });
+
+  wireOptionGroup('format', function(val){
+    state.format = val; state.formatLabel = FORMAT_LABELS[val];
+    var showWriting = (val === 'computer');
+    $('#writing-subblock').classList.toggle('hidden', !showWriting);
+    state.writing = null; state.writingLabel = null;
+    $all('.optcard[data-group="writing"]').forEach(function(c){ c.classList.remove('selected'); });
+    checkFormatContinue();
+  });
+
+  wireOptionGroup('writing', function(val){
+    state.writing = val; state.writingLabel = WRITING_LABELS[val];
+    checkFormatContinue();
+  });
+
+  function checkFormatContinue(){
+    var needsWriting = state.format === 'computer';
+    var ok = state.format && (!needsWriting || state.writing);
+    $('#continue-format').disabled = !ok;
+  }
+
+  $('#continue-format').addEventListener('click', function(){
+    var label = state.formatLabel + (state.writingLabel ? ' · ' + state.writingLabel : '');
+    completeStub('format', 'Selected: <strong>'+label+'</strong>');
+    unlockStub('location');
+    openStub('location');
+  });
+
+  $('#continue-location').addEventListener('click', function(){
+    state.country = $('#sel-country').value;
+    state.city = $('#sel-city').value;
+    completeStub('location', '<strong>'+state.city+', '+state.country+'</strong>');
+    unlockStub('date');
+    openStub('date');
+  });
+  $('#sel-country').addEventListener('change', function(){ state.country = this.value; });
+  $('#sel-city').addEventListener('change', function(){ state.city = this.value; });
+
+  /* ---------- calendar ---------- */
+  var MONTHS_2026 = [
+    {name:'August 2026', year:2026, month:7, enabledFrom:20, days:31, startDow:6},
+    {name:'September 2026', year:2026, month:8, enabledFrom:1, days:30, startDow:2}
+  ];
+
+  function renderCalendar(){
+    var wrap = $('#cal-wrap');
+    wrap.innerHTML = '';
+    MONTHS_2026.forEach(function(m, idx){
+      var col = document.createElement('div');
+      var headHTML = '<div class="cal-month-head"><h3>'+m.name+'</h3>' +
+        (idx===1 ? '<button class="cal-nav" id="cal-next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></button>' : '<span></span>') +
+        '</div>';
+      var grid = '<div class="cal-grid">';
+      ['S','M','T','W','T','F','S'].forEach(function(d){ grid += '<div class="cal-dow">'+d+'</div>'; });
+      for(var i=0;i<m.startDow;i++){ grid += '<div class="cal-day empty"></div>'; }
+      for(var d=1; d<=m.days; d++){
+        var enabled = d >= m.enabledFrom;
+        var id = m.month+'-'+d;
+        var cls = 'cal-day ' + (enabled ? 'enabled' : 'disabled');
+        grid += '<div class="'+cls+'" data-day="'+d+'" data-month="'+m.month+'" data-monthname="'+m.name.split(' ')[0]+'">'+d+'</div>';
+      }
+      grid += '</div>';
+      col.innerHTML = headHTML + grid;
+      wrap.appendChild(col);
+    });
+
+    $all('.cal-day.enabled').forEach(function(day){
+      day.addEventListener('click', function(){
+        $all('.cal-day').forEach(function(d){ d.classList.remove('selected'); });
+        day.classList.add('selected');
+        var d = day.getAttribute('data-day');
+        var mon = day.getAttribute('data-monthname');
+        state.selectedDate = {day:d, month:mon};
+        $('#continue-date').disabled = false;
+      });
+    });
+  }
+  renderCalendar();
+
+  $('#continue-date').addEventListener('click', function(){
+    completeStub('date', 'Selected: <strong>'+state.selectedDate.day+' '+state.selectedDate.month+' 2026</strong>');
+    unlockStub('results');
+    openStub('results');
+    renderSessions();
+  });
+
+  /* ---------- sessions ---------- */
+  function renderSessions(){
+    var list = $('#session-list');
+    list.innerHTML = '';
+    var d = state.selectedDate || {day:'24', month:'Aug'};
+    var dow = 'Mon';
+    var times = [
+      {time:'9:00 AM', price:'490'},
+      {time:'1:00 PM', price:'490'},
+      {time:'3:30 PM', price:'510'}
+    ];
+    $('#session-count').textContent = times.length;
+    times.forEach(function(t, i){
+      var card = document.createElement('div');
+      card.className = 'session-card';
+      card.innerHTML =
+        '<div class="session-date"><span class="dow">'+dow+'</span><span class="dd">'+d.day+'</span><span class="mon">'+d.month+'</span></div>' +
+        '<div class="session-main">' +
+          '<div class="session-top">' +
+            '<div>' +
+              '<div class="session-title">'+state.typeLabel+'</div>' +
+              '<div class="session-loc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/></svg>IDP IELTS '+state.country+' – '+state.city+'</div>' +
+            '</div>' +
+            '<div class="session-price-wrap">' +
+              '<div class="session-time">'+t.time+'</div>' +
+              '<div class="seats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>Seats available</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="session-meta">' +
+            '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l9 6 9-6M4 6h16v12H4z"/></svg>Results in 1–5 days</span>' +
+            '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/></svg>'+state.formatLabel+'</span>' +
+            (state.writingLabel ? '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/></svg>'+state.writingLabel+'</span>' : '') +
+          '</div>' +
+          '<div class="session-bottom">' +
+            '<span class="pill-tag">One Skill Retake available</span>' +
+            '<div style="display:flex; align-items:center; gap:16px;">' +
+              '<span class="session-price">AUD '+t.price+'</span>' +
+              '<button class="btn btn-primary btn-sm select-session" data-time="'+t.time+'" data-price="'+t.price+'">Select and continue</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      list.appendChild(card);
+    });
+
+    $all('.select-session').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        state.session = {
+          day:d.day, month:d.month, time:btn.getAttribute('data-time'), price:btn.getAttribute('data-price')
+        };
+        completeStub('results', 'Session selected: <strong>'+d.day+' '+d.month+', '+btn.getAttribute('data-time')+'</strong>');
+        goToPage(2);
+      });
+    });
+  }
+
+  /* filter / map view are visual toggles only (prototype scope) */
+  $('#filter-toggle').addEventListener('click', function(){ this.classList.toggle('active'); });
+  $('#map-toggle').addEventListener('click', function(){ this.classList.toggle('active'); });
+
+  /* ---------- page routing ---------- */
+  function goToPage(n){
+    state.page = n;
+    $all('.page').forEach(function(p){ p.classList.remove('active'); });
+    $('#page-'+n).classList.add('active');
+    $all('.stage').forEach(function(s){ s.classList.remove('current'); });
+    var current = $('#stage-'+n); if(current) current.classList.add('current');
+    for(var i=1;i<n;i++){
+      var done = $('#stage-'+i);
+      if(done){ done.classList.add('done'); done.classList.remove('current'); }
+    }
+    $('#selectionbar').classList.toggle('hidden', n === 1);
+    if(n >= 2) updateSelectionBar();
+    if(n === 2) preparePage2();
+    if(n === 3) preparePage3();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  $all('.stage.done').forEach(function(){});
+  $all('.stagebar .stage').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var n = parseInt(btn.getAttribute('data-page'),10);
+      if(btn.classList.contains('done') || btn.classList.contains('current')) goToPage(n);
+    });
+  });
+
+  $('#sb-edit').addEventListener('click', function(){ goToPage(1); openStub('results'); });
+  $all('[data-goto-results]').forEach(function(el){
+    el.addEventListener('click', function(){ goToPage(1); openStub('results'); });
+  });
+
+  function updateSelectionBar(){
+    $('#sb-type').textContent = state.typeLabel || '—';
+    $('#sb-format').textContent = (state.formatLabel||'—') + (state.writingLabel ? ' · '+state.writingLabel : '');
+    $('#sb-loc').textContent = state.city+', '+state.country;
+    $('#sb-date').textContent = state.session ? (state.session.day+' '+state.session.month+' 2026') : '—';
+  }
+
+  /* ---------- page 2 prep ---------- */
+  function preparePage2(){
+    $('#p2-test-title').textContent = state.typeLabel;
+    var s = state.session || {day:'24', month:'Aug', time:'9:00 AM'};
+    $('#p2-day1').textContent = s.day; $('#p2-mon1').textContent = s.month; $('#p2-time1').textContent = s.time+' • Listening, Reading, Writing';
+    $('#p2-time1').textContent = s.time;
+    $('#p2-day2').textContent = s.day; $('#p2-mon2').textContent = s.month; $('#p2-time2').textContent = '2:20 PM';
+    $('#p2-loc1').textContent = 'IDP IELTS '+state.country+' – '+state.city;
+    $('#p2-loc2').textContent = 'IDP IELTS '+state.country+' – '+state.city;
+    renderPassSidebar('pass-sidebar-2', false);
+    checkPage2Continue();
+  }
+
+  $all('.radiorow[data-group="bookingfor"]').forEach(function(row){
+    row.addEventListener('click', function(){
+      $all('.radiorow[data-group="bookingfor"]').forEach(function(r){ r.classList.remove('selected'); });
+      row.classList.add('selected');
+      state.bookingFor = row.getAttribute('data-value');
+      checkPage2Continue();
+    });
+  });
+
+  $('#email-go').addEventListener('click', submitEmail);
+  $('#email-input').addEventListener('keydown', function(e){ if(e.key==='Enter') submitEmail(); });
+  function submitEmail(){
+    var val = $('#email-input').value.trim();
+    if(!val){ $('#email-input').focus(); return; }
+    state.email = val;
+    $('#signin-step-email').classList.add('hidden');
+    $('#signin-step-password').classList.remove('hidden');
+  }
+
+  $('#eye-toggle').addEventListener('click', function(){
+    var input = $('#password-input');
+    var isPw = input.type === 'password';
+    input.type = isPw ? 'text' : 'password';
+  });
+
+  $('#signin-btn').addEventListener('click', function(){
+    state.signedIn = true;
+    $('#signin-step-password').classList.add('hidden');
+    $('#signin-step-done').classList.remove('hidden');
+    $('#signedin-email').textContent = state.email || 'thiyagu.govindaraj@idp.com';
+    checkPage2Continue();
+  });
+
+  function checkPage2Continue(){
+    $('#continue-to-review').disabled = !(state.bookingFor && state.signedIn);
+  }
+
+  $('#continue-to-review').addEventListener('click', function(){ goToPage(3); });
+
+  /* ---------- page 3 prep ---------- */
+  function preparePage3(){
+    renderPassSidebar('pass-sidebar-3', true);
+    $('#success-panel').classList.add('hidden');
+    $('#page3-live').classList.remove('hidden');
+  }
+
+  $('#profile-edit-toggle').addEventListener('click', function(){
+    var editing = this.textContent.trim() === 'Save';
+    $all('#profile-grid .value').forEach(function(v){
+      if(editing){
+        var input = v.querySelector('input');
+        if(input){ v.textContent = input.value; }
+      } else {
+        var current = v.querySelector('.verified-tag') ? v.childNodes[0].textContent : v.textContent;
+        var verified = v.querySelector('.verified-tag');
+        v.innerHTML = '';
+        var input = document.createElement('input');
+        input.type = 'text'; input.value = current.trim();
+        v.appendChild(input);
+        if(verified) v.appendChild(verified);
+      }
+    });
+    this.textContent = editing ? 'Edit' : 'Save';
+  });
+
+  $('#pay-online-row').addEventListener('click', function(){
+    this.classList.add('selected');
+    $('#paymethod-block').classList.remove('hidden');
+  });
+
+  $('#pay-btn').addEventListener('click', function(){
+    var btn = this;
+    btn.disabled = true;
+    $('#pay-btn-label').innerHTML = '<span class="spinner"></span> Processing…';
+    setTimeout(function(){
+      state.paid = true;
+      $('#page3-live').classList.add('hidden');
+      var panel = $('#success-panel');
+      panel.classList.remove('hidden');
+      $('#success-email').textContent = state.email || 'your registered email';
+      $('#success-ref').textContent = 'IELTS-' + Math.floor(100000 + Math.random()*899999);
+      $all('.stage').forEach(function(s){ s.classList.add('done'); s.classList.remove('current'); });
+    }, 1100);
+  });
+
+  $('#success-done').addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* ---------- boarding-pass sidebar (shared render) ---------- */
+  function renderPassSidebar(targetId, showPayment){
+    var s = state.session || {day:'24', month:'Aug', time:'9:00 AM', price:'490'};
+    var html =
+      '<div class="pass">' +
+        '<div class="pass-top"><span class="eyebrow">Your booking summary</span><h3>'+state.typeLabel+' &middot; '+(state.formatLabel||'')+'</h3></div>' +
+        '<div class="pass-seg">' +
+          '<div class="pass-date"><span class="dd">'+s.day+'</span><span class="mon">'+s.month+'</span></div>' +
+          '<div class="pass-seg-body">' +
+            '<div class="pass-seg-title">Listening, Reading, Writing</div>' +
+            '<div class="pass-seg-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/></svg>IDP IELTS '+state.country+' – '+state.city+'</div>' +
+            '<div class="pass-seg-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'+s.time+'</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="pass-seg">' +
+          '<div class="pass-date"><span class="dd">'+s.day+'</span><span class="mon">'+s.month+'</span></div>' +
+          '<div class="pass-seg-body">' +
+            '<div class="pass-seg-title">Speaking <span class="best-tag">Best available</span></div>' +
+            '<div class="pass-seg-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/></svg>IDP IELTS '+state.country+' – '+state.city+'</div>' +
+            '<div class="pass-seg-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>2:20 PM</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="perforation"></div>' +
+        '<div class="promo">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 7v14M12 7C10 3 5 4 5 7s5 0 7 0zM12 7c2-4 7-3 7 0s-5 0-7 0z"/></svg>' +
+          '<div><div class="promo-title">Book now for a free IELTS Preparation course</div>' +
+          '<ul><li>Hundreds of study materials</li><li>Sample questions with model answers</li><li>60+ guided video tutorials</li></ul></div>' +
+        '</div>' +
+        (showPayment ?
+          '<div class="pass-payment">' +
+            '<div class="pass-payment-row"><span>Test fee</span><span class="amt">AUD 445.45</span></div>' +
+            '<div class="pass-payment-row"><span>Card processing fee</span><span class="amt">AUD 44.55</span></div>' +
+            '<div class="pass-payment-row total"><span>Total</span><span class="amt">AUD '+(s.price||'490')+'.00</span></div>' +
+          '</div>'
+        : '') +
+      '</div>';
+    $('#'+targetId).innerHTML = html;
+    if(showPayment){ $('#pay-amount').textContent = '$'+(s.price||'490')+'.00'; }
+  }
+
+})();
+</script>
+</body>
+</html>

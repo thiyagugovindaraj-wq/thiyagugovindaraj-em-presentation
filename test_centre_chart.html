@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Centre Sessions, Capacity &amp; Bookings</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background:#faf9f5; color:#2d2d2a; margin:0; padding:2rem; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin-bottom: 0.25rem; }
+  p.sub { color:#6b6a63; margin-top:0; margin-bottom:1.5rem; font-size:0.95rem; }
+  .card { background:#fff; border:1px solid #e5e3da; border-radius:12px; padding:1.5rem; box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+  .buttons { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; }
+  button { font-size:13px; padding:7px 16px; border-radius:8px; border:1px solid #d9d7cd; background:transparent; cursor:pointer; color:#2d2d2a; }
+  button.active { background:#f0efe7; border-color:#b8b6aa; font-weight:600; }
+  #legend { display:flex; flex-wrap:wrap; gap:16px; margin-bottom:10px; font-size:12px; color:#6b6a63; }
+  .swatch { width:10px; height:10px; border-radius:2px; display:inline-block; margin-right:4px; vertical-align:middle; }
+  canvas { max-height: 420px; }
+  footer { text-align:center; color:#9a988e; font-size:12px; margin-top:1.5rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Test Centre Sessions, Capacity &amp; Bookings — 23–28 Aug 2026</h1>
+  <p class="sub">Aggregated from 404 test-centre/date rows across 78 test centres.</p>
+  <div class="card">
+    <div class="buttons">
+      <button id="btn-date" class="active">By date</button>
+      <button id="btn-centre">Top 15 test centres</button>
+    </div>
+    <div id="legend"></div>
+    <canvas id="chart"></canvas>
+  </div>
+  <footer>Generated chart · data aggregated from provided dataset</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const byDate = {
+  labels: ['23 Aug','24 Aug','25 Aug','26 Aug','27 Aug','28 Aug'],
+  sessions: [767,869,1147,1444,1512,1629],
+  capacity: [1326,1453,1875,2428,2596,2866],
+  bookings: [31,56,53,74,84,90]
+};
+
+const byCentre = {
+  labels: ['NG448','PK601','KW033','BD050','NG126','VN104','CA067','SA036','ID017','PH009','SA043','CA841','KZ078','KE046','PK363'],
+  sessions: [805,460,331,444,372,315,256,337,255,230,218,150,165,156,164],
+  capacity: [1357,690,652,634,607,600,552,477,426,351,334,320,305,291,260],
+  bookings: [38,12,33,26,29,0,10,12,16,9,16,10,2,12,11]
+};
+
+const blue = '#2a78d6', orange = '#eb6834', aqua = '#1baf7a';
+
+function buildDatasets(src) {
+  return [
+    { label: 'Total sessions', data: src.sessions, backgroundColor: blue },
+    { label: 'Total capacity', data: src.capacity, backgroundColor: orange },
+    { label: 'Total bookings', data: src.bookings, backgroundColor: aqua }
+  ].map(d => ({...d, borderRadius: 3, maxBarThickness: 26}));
+}
+
+const ctx = document.getElementById('chart');
+let chart = new Chart(ctx, {
+  type: 'bar',
+  data: { labels: byDate.labels, datasets: buildDatasets(byDate) },
+  options: {
+    responsive: true,
+    scales: {
+      x: { ticks: { autoSkip: false, maxRotation: 0, color: '#6b6a63' }, grid: { display: false } },
+      y: { ticks: { color: '#6b6a63' }, grid: { color: '#e5e3da' }, title: { display: true, text: 'Count', color: '#6b6a63' } }
+    },
+    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }
+  }
+});
+
+function renderLegend() {
+  const legend = document.getElementById('legend');
+  legend.innerHTML = '';
+  chart.data.datasets.forEach(d => {
+    const span = document.createElement('span');
+    span.innerHTML = '<span class="swatch" style="background:' + d.backgroundColor + ';"></span>' + d.label;
+    legend.appendChild(span);
+  });
+}
+
+function setView(key) {
+  const src = key === 'date' ? byDate : byCentre;
+  chart.data.labels = src.labels;
+  chart.data.datasets = buildDatasets(src);
+  chart.options.scales.x.ticks.maxRotation = key === 'centre' ? 45 : 0;
+  chart.update();
+  renderLegend();
+  document.getElementById('btn-date').classList.toggle('active', key === 'date');
+  document.getElementById('btn-centre').classList.toggle('active', key === 'centre');
+}
+
+document.getElementById('btn-date').addEventListener('click', () => setView('date'));
+document.getElementById('btn-centre').addEventListener('click', () => setView('centre'));
+setView('date');
+</script>
+</body>
+</html>

@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EM Interview Console — Prep Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a1120;
+    --bg-grid: rgba(79,209,197,0.035);
+    --panel:#0e1728;
+    --panel-alt:#131f36;
+    --border:#1f2c45;
+    --border-soft:#182238;
+    --text:#e7ecf3;
+    --text-muted:#8695ac;
+    --text-faint:#54627c;
+
+    --stability:#4fd1c5;
+    --assets:#60a5fa;
+    --cost:#f5b942;
+    --ai:#a78bfa;
+    --vendor:#fb7185;
+
+    --accent: var(--stability);
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--bg-grid) 1px, transparent 1px) 0 0/100% 28px,
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px) 0 0/28px 100%,
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:inherit;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 22px;
+    border-bottom:1px solid var(--border);
+    background:rgba(10,17,32,0.85);
+    backdrop-filter:blur(6px);
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:var(--mono);
+    font-size:13px;
+    letter-spacing:0.06em;
+    color:var(--text-muted);
+  }
+  .brand .dot{
+    width:8px;height:8px;border-radius:2px;
+    background:var(--stability);
+    box-shadow:0 0 8px var(--stability);
+    flex:none;
+  }
+  .brand strong{color:var(--text);font-weight:600;}
+  .clock{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-faint);
+    letter-spacing:0.04em;
+  }
+
+  /* ---------- layout ---------- */
+  .shell{
+    display:grid;
+    grid-template-columns:250px 1fr;
+    max-width:1180px;
+    margin:0 auto;
+    min-height:calc(100vh - 53px);
+  }
+  @media (max-width:860px){
+    .shell{grid-template-columns:1fr;}
+  }
+
+  /* ---------- sidebar ---------- */
+  nav.sidebar{
+    border-right:1px solid var(--border);
+    padding:22px 14px;
+    position:sticky;
+    top:53px;
+    align-self:start;
+    height:calc(100vh - 53px);
+    overflow-y:auto;
+  }
+  @media (max-width:860px){
+    nav.sidebar{
+      position:static;
+      height:auto;
+      border-right:none;
+      border-bottom:1px solid var(--border);
+      padding:14px 14px 8px;
+    }
+    .sidebar .nav-list{
+      display:flex;
+      gap:8px;
+      overflow-x:auto;
+      padding-bottom:8px;
+    }
+    .sidebar .nav-list::-webkit-scrollbar{height:4px;}
+    .sidebar-label{display:none;}
+  }
+
+  .sidebar-label{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    margin:0 8px 12px;
+  }
+
+  .nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;}
+
+  .nav-item{
+    --c: var(--stability);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:100%;
+    background:transparent;
+    border:1px solid transparent;
+    border-radius:8px;
+    padding:10px 10px;
+    cursor:pointer;
+    text-align:left;
+    color:var(--text-muted);
+    font-family:var(--sans);
+    font-size:13.5px;
+    font-weight:500;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
+    white-space:nowrap;
+  }
+  .nav-item:hover{background:var(--panel-alt);color:var(--text);}
+  .nav-item:focus-visible{outline:2px solid var(--c);outline-offset:2px;}
+  .nav-item.active{
+    background:var(--panel-alt);
+    border-color:var(--border);
+    color:var(--text);
+  }
+  .nav-item.active .nav-dot{
+    background:var(--c);
+    box-shadow:0 0 8px var(--c);
+  }
+  .nav-item .nav-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--text-faint);
+    flex:none;
+    transition:background .15s ease, box-shadow .15s ease;
+  }
+  .nav-item .nav-badge{
+    font-family:var(--mono);
+    font-size:10px;
+    color:var(--text-faint);
+    margin-left:auto;
+    letter-spacing:0.04em;
+  }
+  .nav-item.active .nav-badge{color:var(--c);}
+
+  .sidebar-footer{
+    margin-top:24px;
+    padding:12px 10px 4px;
+    border-top:1px solid var(--border-soft);
+    font-family:var(--mono);
+    font-size:10.5px;
+    line-height:1.7;
+    color:var(--text-faint);
+  }
+  @media (max-width:860px){ .sidebar-footer{display:none;} }
+
+  /* ---------- main content ---------- */
+  main{padding:32px 34px 60px;min-width:0;}
+  @media (max-width:600px){ main{padding:22px 18px 48px;} }
+
+  .panel{display:none;animation:fadeIn .35s ease;}
+  .panel.active{display:block;}
+  @media (prefers-reduced-motion: reduce){
+    .panel{animation:none;}
+  }
+  @keyframes fadeIn{
+    from{opacity:0; transform:translateY(4px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  .panel-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    border-bottom:1px solid var(--border);
+    padding-bottom:18px;
+    margin-bottom:22px;
+  }
+  .panel-badge{
+    --c:var(--stability);
+    width:44px;height:44px;
+    border-radius:9px;
+    background:color-mix(in srgb, var(--c) 14%, transparent);
+    border:1px solid color-mix(in srgb, var(--c) 45%, transparent);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:14px;
+    color:var(--c);
+    flex:none;
+  }
+  .panel-titles h1{
+    margin:0 0 4px;
+    font-size:23px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .panel-titles p{
+    margin:0;
+    font-size:13.5px;
+    color:var(--text-muted);
+    max-width:52ch;
+  }
+  .status-tag{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    color:var(--c, var(--stability));
+    border:1px solid color-mix(in srgb, var(--c, var(--stability)) 45%, transparent);
+    background:color-mix(in srgb, var(--c, var(--stability)) 10%, transparent);
+    padding:4px 9px;
+    border-radius:5px;
+    white-space:nowrap;
+    align-self:flex-start;
+  }
+
+  .console-line{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text-faint);
+    margin-bottom:22px;
+    display:flex;
+    gap:8px;
+    align-items:baseline;
+  }
+  .console-line .prompt{color:var(--stability);}
+  .console-line .cmd{color:var(--text-muted);}
+
+  .section-label{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin:0 0 12px;
+  }
+
+  .point-grid{
+    display:grid;
+    gap:10px;
+    margin-bottom:28px;
+  }
+  .point{
+    background:var(--panel);
+    border:1px solid var(--border-soft);
+    border-left:2px solid var(--c, var(--stability));
+    border-radius:7px;
+    overflow:hidden;
+  }
+  .point summary{
+    display:grid;
+    grid-template-columns:20px 1fr 16px;
+    align-items:center;
+    gap:10px;
+    padding:13px 14px;
+    cursor:pointer;
+    list-style:none;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .point summary::-webkit-details-marker{display:none;}
+  .point summary::marker{content:"";}
+  .point summary:focus-visible{outline:2px solid var(--c, var(--stability));outline-offset:-2px;}
+  .point .idx{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--c, var(--stability));
+  }
+  .point summary h3{
+    margin:0;
+    font-size:14px;
+    font-weight:600;
+    color:var(--text);
+  }
+  .point .chevron{
+    font-size:11px;
+    color:var(--text-faint);
+    transition:transform .18s ease;
+    line-height:1;
+  }
+  .point[open] .chevron{
+    transform:rotate(90deg);
+    color:var(--c, var(--stability));
+  }
+  .point[open] summary{
+    border-bottom:1px solid var(--border-soft);
+  }
+  .point-body{
+    background:#ffffff;
+    padding:14px 16px 16px 44px;
+    animation:expandIn .2s ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .point-body{animation:none;}
+  }
+  @keyframes expandIn{
+    from{opacity:0;}
+    to{opacity:1;}
+  }
+  .point-body p{
+    margin:0;
+    font-size:13px;
+    line-height:1.6;
+    color:#2b2b2b;
+  }
+
+  .callout{
+    background:var(--panel-alt);
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:16px 18px;
+    margin-bottom:22px;
+  }
+  .callout-label{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--c, var(--stability));
+    margin-bottom:9px;
+  }
+  .callout-label::before{
+    content:"";
+    width:6px;height:6px;
+    border-radius:50%;
+    background:var(--c, var(--stability));
+    box-shadow:0 0 6px var(--c, var(--stability));
+  }
+  .callout p{
+    margin:0;
+    font-size:13.5px;
+    line-height:1.65;
+    color:var(--text);
+  }
+  .callout .metric{
+    font-family:var(--mono);
+    color:var(--c, var(--stability));
+    font-weight:600;
+  }
+
+  .watch{
+    display:flex;
+    gap:10px;
+    padding:12px 14px;
+    border:1px dashed var(--border);
+    border-radius:8px;
+    font-size:12.5px;
+    color:var(--text-muted);
+    line-height:1.6;
+  }
+  .watch b{color:var(--text);}
+
+  /* ---------- lightbox ---------- */
+.point-body img{
+  cursor: zoom-in;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: opacity .15s ease, transform .15s ease;
+}
+.point-body img:hover{
+  opacity: 0.9;
+  transform: scale(1.01);
+}
+
+.lightbox-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(5,9,18,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .2s ease;
+  padding: 40px;
+}
+.lightbox-overlay.open{
+  opacity: 1;
+  visibility: visible;
+}
+@media (prefers-reduced-motion: reduce){
+  .lightbox-overlay{ transition: none; }
+}
+.lightbox-figure{
+  max-width: min(92vw, 1100px);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.lightbox-figure img{
+  max-width: 100%;
+  max-height: 78vh;
+  width: auto;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+  background: var(--panel);
+}
+.lightbox-caption{
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.lightbox-close{
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--panel-alt);
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.lightbox-close:hover{
+  background: var(--panel);
+  border-color: var(--stability);
+  color: var(--stability);
+}
+.lightbox-close:focus-visible{
+  outline: 2px solid var(--stability);
+  outline-offset: 2px;
+}
+.lightbox-nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--panel-alt);
+  color: var(--text);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.lightbox-nav:hover{
+  background: var(--panel);
+  border-color: var(--stability);
+  color: var(--stability);
+}
+.lightbox-nav.prev{ left: 20px; }
+.lightbox-nav.next{ right: 20px; }
+@media (max-width: 640px){
+  .lightbox-nav{ width: 36px; height: 36px; font-size: 16px; }
+  .lightbox-nav.prev{ left: 8px; }
+  .lightbox-nav.next{ right: 8px; }
+  .lightbox-close{ top: 10px; right: 10px; }
+}
+
+footer.global{
+    max-width:1180px;
+    margin:0 auto;
+    padding:20px 34px 40px;
+    border-top:1px solid var(--border);
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-faint);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  
+  .container {
+    display: flex;
+    width: 100%;
+  }
+
+ .left {
+    width: 50%;
+    padding: 20px;
+  }
+
+ .right {
+    padding: 20px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand"><strong>Thiyagu Govindaraj</strong></div>
+	<div class="brand"><span class="dot"></span><strong>EM INTERVIEW PRESENTATION</strong><span class="dot"></span></div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+
+  <div class="shell">
+    <nav class="sidebar" aria-label="Topic navigation">
+      <!--<p class="sidebar-label">Topics Proposal</p>-->
+      <ul class="nav-list" id="navList">
+        <li><button class="nav-item active" data-target="stability" style="--c:var(--stability)"><span class="nav-dot"></span>Platform Improvements<span class="nav-badge">PI</span></button></li>
+        <li><button class="nav-item" data-target="assets" style="--c:var(--assets)"><span class="nav-dot"></span>Assets Management<span class="nav-badge">AM</span></button></li>
+        <li><button class="nav-item" data-target="cost" style="--c:var(--cost)"><span class="nav-dot"></span>Cost<span class="nav-badge">CO</span></button></li>
+        <li><button class="nav-item" data-target="ai" style="--c:var(--ai)"><span class="nav-dot"></span>AI<span class="nav-badge">AI</span></button></li>
+        <!--<li><button class="nav-item" data-target="vendor" style="--c:var(--vendor)"><span class="nav-dot"></span>Vendor Management<span class="nav-badge">VM</span></button></li>-->
+      </ul>
+      <div class="sidebar-footer">
+        <br><br><br>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="docs/Thiyagu_G_Resume_Aug 2026.pdf" target="_blank" rel="noopener noreferrer">
+			<img src="images/cv-icon.jpg" alt="Resume / CV" width="100" height="140">
+		</a>
+		
+      </div>
+    </nav>
+
+    <main id="main">
+
+      <!-- PLATFORM STABILITY -->
+      <section class="panel active" id="panel-stability" style="--c:var(--stability)">
+        <div class="panel-head">
+          <div style="display:flex;gap:14px;">
+            <div class="panel-badge" style="--c:var(--stability)">PI</div>
+            <div class="panel-titles">
+              <h1>Platform Improvements</h1>
+              <p>Build platforms that are more reliable, scalable, secure, and efficient.</p>
+            </div>
+          </div>
+          <span class="status-tag" style="--c:var(--stability)">FOCUS: RELIABILITY</span>
+        </div>
+
+        <!--<div class="console-line"><span class="prompt">$</span><span class="cmd">show talking-points --topic platform-stability</span></div>-->
+
+        <p class="section-label">What are we always aiming to</p>
+        <div class="callout" style="--c:var(--stability)">
+          <div class="callout-label">Driving continuous platform improvement to achieve scalability, security, and operational excellence.</div>
+        </div>
+
+        <p class="section-label">Key improvements area</p>
+        <div class="point-grid">
+		  <details class="point" style="--c:var(--stability)"><summary><span class="idx">01</span><h3>Booking Occupancy Analysis</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p><img src="images/Booking_Occupancy.png" alt="Booking Occupancy Analysis" width="780" height="360">
+		  &nbsp;&nbsp;&nbsp;&nbsp;
+		  <a href="all_metrics_bar_chart.html" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 8px 20px; background: #0078d4; color: white; text-decoration: none; border-radius: 5px;">Click</a>
+		  </p></div></details>
+		  <details class="point" style="--c:var(--stability)"><summary><span class="idx">02</span><h3>Booking Dropoff Analysis by Page wise</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p><img src="images/bx_booking_dropoff.png" alt="Booking Occupancy Analysis" width="780" height="360">
+		  &nbsp;&nbsp;&nbsp;&nbsp;
+		  <a href="bx_booking_dropoff.html" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 8px 20px; background: #0078d4; color: white; text-decoration: none; border-radius: 5px;">Click</a>
+		  </p></div></details>
+          <details class="point" style="--c:var(--stability)"><summary><span class="idx">03</span><h3>Booking Journey Optimisation</h3><span class="chevron">&#9656;</span></summary><div class="point-body">
+		  <div class="container">
+			<div class="left">
+				<p><strong>Current Booking Journey:<strong><br><img src="images/Old.png" alt="Current Booking Journey" width="350" height="250"></p>
+			</div>
+			<div class="right">
+				<p><strong>Proposed Booking Journey:<strong><br><img src="images/New.png" alt="Proposed Booking Journey" width="350" height="250">
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="Proposed_Booking_Journey.html" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 8px 20px; background: #0078d4; color: white; text-decoration: none; border-radius: 5px;">Click</a></p>
+			</div>
+		  </div>
+		  </div></details>
+          <details class="point" style="--c:var(--stability)"><summary><span class="idx">04</span><h3>48-Hour Booking limitation</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p><img src="images/Booking_Open_Till.png" alt="Booking on Behalf in TAS" width="780" height="400"></p></div></details>
+          <details class="point" style="--c:var(--stability)"><summary><span class="idx">05</span><h3>Booking on Behalf – OSR Enablement</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p><img src="images/Book_On_Behalf.png" alt="Booking on Behalf in TAS" width="780" height="400"></p></div></details>
+          <details class="point" style="--c:var(--stability)"><summary><span class="idx">06</span><h3>TAS Modernization</h3><span class="chevron">&#9656;</span></summary><div class="point-body">
+		  <div class="container">
+			<div class="left">
+				<p><strong>Current TAS Page:<strong><br><img src="images/tas_old.png" alt="Current TAS Page" width="350" height="250"></p>
+			</div>
+			<div class="right">
+				<p><strong>Proposed TAS Page:<strong><br><img src="images/tas_new.png" alt="Proposed TAS Page" width="350" height="250">
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="Proposed_TAS.html" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 8px 20px; background: #0078d4; color: white; text-decoration: none; border-radius: 5px;">Click</a></p>
+			</div>
+		  </div>
+		  </div></details>
+        </div>
+
+        <!--<div class="callout" style="--c:var(--stability)">
+          <div class="callout-label">TT pack optimization </div>
+          <p>Objective: Improve the Test Taker (TT) pack by reducing bundle size and accelerating the Jest test execution time.
+		  <img src="images/TT_Pack_Size_Optimization.png" alt="TT Pack Size Optimization" width="780" height="100">
+		  </p>
+        </div>-->
+      </section>
+
+      <!-- ASSETS MANAGEMENT -->
+      <section class="panel" id="panel-assets" style="--c:var(--assets)">
+        <div class="panel-head">
+          <div style="display:flex;gap:14px;">
+            <div class="panel-badge" style="--c:var(--assets)">AM</div>
+            <div class="panel-titles">
+              <h1>Assets Management</h1>
+              <p style="font-size: 11px;">Maximize the value of every asset through strong ownership, governance, and lifecycle management.</p>
+            </div>
+          </div>
+          <span class="status-tag" style="--c:var(--assets)">FOCUS: GOVERNANCE</span>
+        </div>
+
+        <p class="section-label">What are we always aiming to</p>
+        <div class="callout" style="--c:var(--assets)">
+          <div class="callout-label">Ensuring every repository's infra resource is secure, governed, optimized, and aligned with business value.</div>
+          <!--<p>Whether you track and govern what the org owns, rather than just shipping features on top of an untracked pile of infra.</p>-->
+        </div>
+
+        <p class="section-label">Key improvements area</p>
+        <div class="point-grid">
+          <details class="point" style="--c:var(--assets)"><summary><span class="idx">01</span><h3>Repository Management</h3><span class="chevron">&#9656;</span></summary><div class="point-body">
+		  <ul style="line-height: 1.5; display: block; color: black; font-size: 12px;">
+			<li>Ownership</li>
+			<li>Access governance</li>
+			<li>Security scanning</li>
+			<li>Documentation</li>
+			<li>Lifecycle management</li>
+			<li>Archived or consolidated</li>
+		  </ul>
+		  </div></details>
+          <details class="point" style="--c:var(--assets)"><summary><span class="idx">02</span><h3>Deprecation of Older API Versions</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p><strong>Engineering Approach<strong><br><img src="images/Deprecation_of_Older_API.png" alt="Deprecation of Older API" width="250" height="400"></p></div></details>
+          <details class="point" style="--c:var(--assets)"><summary><span class="idx">03</span><h3>Resource Rationalization</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p><strong>Engineering Approach<strong><br><img src="images/Resource_Rationalization.png" alt="Resource Rationalization" width="300" height="350"></p></div></details>
+          <details class="point" style="--c:var(--assets)"><summary><span class="idx">04</span><h3>Audit Log Implementation</h3><span class="chevron">&#9656;</span></summary><div class="point-body">
+		  <ul style="line-height: 1.5; display: block; color: black; font-size: 12px;">
+			<li>Ops User login/logout</li>
+			<li>Authentication failures</li>
+			<li>Role/permission changes</li>
+			<li>Configuration changes</li>
+			<li>Create/update/delete operations</li>
+			<li>Payment approved</li>
+			<li>Etc,.</li>
+		  </ul>
+		  </div></details>	  
+        </div>
+
+        <!--<p class="section-label">Sample story (STAR)</p>
+        <div class="callout" style="--c:var(--assets)">
+          <div class="callout-label">Ready to tell</div>
+          <p>Using Terraform as infrastructure-as-code gave us a single audit trail of every AWS resource — turned quarterly access and cost reviews from manual discovery into a <span class="metric">15-minute</span> query.</p>
+        </div>-->
+      </section>
+
+      <!-- COST -->
+      <section class="panel" id="panel-cost" style="--c:var(--cost)">
+        <div class="panel-head">
+          <div style="display:flex;gap:14px;">
+            <div class="panel-badge" style="--c:var(--cost)">CO</div>
+            <div class="panel-titles">
+              <h1>Cost</h1>
+              <p style="font-size: 11px;">Optimize engineering costs without compromising quality, security, reliability, or customer experience.</p>
+            </div>
+          </div>
+          <span class="status-tag" style="--c:var(--cost)">FOCUS: FINOPS</span>
+        </div>
+
+        <!--<div class="console-line"><span class="prompt">$</span><span class="cmd">show talking-points --topic cost</span></div>-->
+
+        <p class="section-label">What are we always aiming to</p>
+        <div class="callout" style="--c:var(--cost)">
+          <div class="callout-label">Optimize engineering costs through resource utilization, infrastructure rationalization, automation</div>
+          <!--<p>A FinOps mindset — do you make cost trade-offs deliberately, as part of engineering decisions, instead of by default?</p>-->
+        </div>
+
+        <p class="section-label">Key improvements area</p>
+        <div class="point-grid">
+          <details class="point" style="--c:var(--cost)"><summary><span class="idx">01</span><h3>RDS Separation by Asset wise</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p style="padding: 14px 166px;"><img src="images/RDS_Separation_by_Asset.png" alt="RDS Separation by Asset" width="400" height="750"></p></div></details>
+          <details class="point" style="--c:var(--cost)"><summary><span class="idx">02</span><h3>Table Partitioning limitation</h3><span class="chevron">&#9656;</span></summary><div class="point-body"> 
+		  <p style="padding: 14px 166px;"><img src="images/Table_Partitioning_limitation.png" alt="Table Partitioning Limitation" width="450" height="500"></p>
+		  </div></details>
+          <details class="point" style="--c:var(--cost)"><summary><span class="idx">03</span><h3>PERF Environment Decommisioning</h3><span class="chevron">&#9656;</span></summary><div class="point-body">
+		  <ul style="line-height: 1.5; display: block; color: black; font-size: 12px;">
+			<li>LT-PERF Account Decommisioning</li>
+		  </ul>
+		  </div></details>
+		  <details class="point" style="--c:var(--cost)"><summary><span class="idx">04</span><h3>Operational Cost Optimisation Opportunities</h3><span class="chevron">&#9656;</span></summary><div class="point-body">
+		  <p><img src="images/tc_booking_analysis.png" alt="Operational Cost Optimisation Opportunities" width="780" height="400">
+		  &nbsp;&nbsp;&nbsp;&nbsp;
+		  <a href="tc_booking_analysis.html" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 8px 20px; background: #0078d4; color: white; text-decoration: none; border-radius: 5px;">TC Performance Analysis</a>
+		  </p>
+		  </div></details>
+        </div>
+
+        <!--<p class="section-label">Sample story (STAR)</p>
+        <div class="callout" style="--c:var(--cost)">
+          <div class="callout-label">Ready to tell</div>
+          <p>Moved a workload from always-on EC2 to event-driven Lambda / SQS, cutting compute cost by <span class="metric">~30%</span> while improving elasticity during peak load.</p>
+        </div>
+
+        <div class="watch"><span>⚠</span><div><b>Watch for:</b> pair every optimization with the reliability trade-off you considered — cost-cutting without that context reads as short-sighted.</div></div>-->
+      </section>
+
+      <!-- AI -->
+      <section class="panel" id="panel-ai" style="--c:var(--ai)">
+        <div class="panel-head">
+          <div style="display:flex;gap:14px;">
+            <div class="panel-badge" style="--c:var(--ai)">AI</div>
+            <div class="panel-titles">
+              <h1>AI</h1>
+              <p style="font-size: 11px;">Leverage AI responsibly to accelerate engineering productivity, innovation, and business value.</p>
+            </div>
+          </div>
+          <span class="status-tag" style="--c:var(--ai)">FOCUS: ADOPTION</span>
+        </div>
+
+        <!--<div class="console-line"><span class="prompt">$</span><span class="cmd">show talking-points --topic ai</span></div>-->
+
+        <p class="section-label">What are we always aiming to</p>
+        <div class="callout" style="--c:var(--ai)">
+          <div class="callout-label">Adopt AI responsibly as an engineering productivity multiplier, using it to accelerate development, testing, operations.</div>
+          <!--<p>Current, grounded thinking — can you drive AI adoption on your team responsibly, with real measurement, not assumption?</p>-->
+        </div>
+
+        <p class="section-label">Key improvements area</p>
+        <div class="point-grid">
+          <details class="point" style="--c:var(--ai)"><summary><span class="idx">01</span><h3>Agentic AI</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p>
+		  <ul style="line-height: 1.5; display: block; color: black; font-size: 12px;">
+			<li>Development</li>
+			<li>Code Review</li>
+			<li>Unit testing</li>
+			<li>e2e Testing</li>
+			<li>Logs monitoring</li>
+			<li>Incident Management</li>
+		  </ul>
+		  </p></div></details>
+          <details class="point" style="--c:var(--ai)"><summary><span class="idx">02</span><h3>Where you'd apply it next</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p>
+		  <ul style="line-height: 1.5; display: block; color: black; font-size: 12px;">
+		    <li>AI-assisted test session grouping</li>
+			<li>Using LLMs for support ticket categorization</li>
+			<li>AI-assisted incident triage (summarizing logs/alerts)</li>
+			<li>AI-assisted test coverage analysis</li>
+			<li>Etc,.</li>
+		  </ul>
+		  </p></div></details>          
+        </div>
+
+        <!--<p class="section-label">Sample story (STAR)</p>
+        <div class="callout" style="--c:var(--ai)">
+          <div class="callout-label">Ready to tell</div>
+          <p>Built the STT/TTS pipeline for the HCIndia audio chatbot — learned to evaluate AI vendor APIs on accuracy, latency, and cost <span class="metric">before</span> committing to production.</p>
+        </div>
+
+        <div class="watch"><span>⚠</span><div><b>Watch for:</b> have one point of view on AI risk (data privacy, hallucination, over-reliance) — interviewers notice if you only talk upside.</div></div>-->
+      </section>
+
+      <!-- VENDOR MANAGEMENT -->
+      <!--<section class="panel" id="panel-vendor" style="--c:var(--vendor)">
+        <div class="panel-head">
+          <div style="display:flex;gap:14px;">
+            <div class="panel-badge" style="--c:var(--vendor)">VM</div>
+            <div class="panel-titles">
+              <h1>Vendor Management</h1>
+              <p>Managing external dependencies as strategically as your own team.</p>
+            </div>
+          </div>
+          <span class="status-tag" style="--c:var(--vendor)">FOCUS: EXTERNAL RISK</span>
+        </div>
+
+        <!--<div class="console-line"><span class="prompt">$</span><span class="cmd">show talking-points --topic vendor-management</span></div>
+
+        <p class="section-label">What are we always aiming to</p>
+        <div class="callout" style="--c:var(--vendor)">
+          <div class="callout-label">Interviewer intent</div>
+          <p>Can you evaluate, negotiate with, and hold external vendors accountable the same way you'd manage an internal team?</p>
+        </div>
+
+        <p class="section-label">Key improvements area</p>
+        <div class="point-grid">
+          <details class="point" style="--c:var(--vendor)"><summary><span class="idx">01</span><h3>Selection criteria</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p>Security and compliance posture, SLA guarantees, pricing model, support responsiveness, and exit / portability options.</p></div></details>
+          <details class="point" style="--c:var(--vendor)"><summary><span class="idx">02</span><h3>Contract & SLA management</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p>Negotiate uptime guarantees and penalty clauses; track renewal timelines and vendor performance against SLA.</p></div></details>
+          <details class="point" style="--c:var(--vendor)"><summary><span class="idx">03</span><h3>Relationship management</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p>Regular review cadence, clear escalation paths, and a running scorecard rather than reactive check-ins.</p></div></details>
+          <details class="point" style="--c:var(--vendor)"><summary><span class="idx">04</span><h3>Risk mitigation</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p>Fallback strategy for critical dependencies; clarity on data ownership and portability before signing.</p></div></details>
+          <details class="point" style="--c:var(--vendor)"><summary><span class="idx">05</span><h3>Build vs. buy</h3><span class="chevron">&#9656;</span></summary><div class="point-body"><p>Evaluating managed AWS services (Cognito, RDS) against self-hosted alternatives is a vendor decision too.</p></div></details>
+        </div>
+
+        <!--<p class="section-label">Sample story (STAR)</p>
+        <div class="callout" style="--c:var(--vendor)">
+          <div class="callout-label">Ready to tell</div>
+          <p>Evaluated managed AWS services against self-hosted alternatives on total cost of ownership and support burden — <span class="metric">not just sticker price</span> — before recommending a path.</p>
+        </div>
+
+        <div class="watch"><span>⚠</span><div><b>Watch for:</b> mention at least one time a vendor underperformed and what you did — pure vendor-selection stories skip the harder half of the job.</div></div>
+      </section>-->
+
+    </main>
+  </div>
+
+  <footer class="global">
+    <span>THIYAGU GOVINDARAJ</span>
+    <span>ALL TOPICS · USE STAR + ATTACH A NUMBER TO EVERY STORY</span>
+  </footer>
+
+<div class="lightbox-overlay" id="lightboxOverlay" role="dialog" aria-modal="true" aria-label="Image preview">
+  <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Previous image" type="button">&#8249;</button>
+  <figure class="lightbox-figure">
+    <img id="lightboxImg" src="" alt="">
+    <figcaption class="lightbox-caption" id="lightboxCaption"></figcaption>
+  </figure>
+  <button class="lightbox-nav next" id="lightboxNext" aria-label="Next image" type="button">&#8250;</button>
+  <button class="lightbox-close" id="lightboxClose" aria-label="Close image preview" type="button">&times;</button>
+</div>
+
+<script>
+  const navItems = document.querySelectorAll('.nav-item');
+  const panels = document.querySelectorAll('.panel');
+  const order = ['stability','assets','cost','ai','vendor'];
+
+  function activate(target){
+    navItems.forEach(n => n.classList.toggle('active', n.dataset.target === target));
+    panels.forEach(p => p.classList.toggle('active', p.id === 'panel-' + target));
+    const activeItem = document.querySelector('.nav-item[data-target="'+target+'"]');
+    if(activeItem) activeItem.scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'});
+  }
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => activate(item.dataset.target));
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if(e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const lb = document.getElementById('lightboxOverlay');
+    if(lb && lb.classList.contains('open')) return;
+    const current = document.querySelector('.nav-item.active').dataset.target;
+    let idx = order.indexOf(current);
+    idx = e.key === 'ArrowRight' ? (idx+1) % order.length : (idx-1+order.length) % order.length;
+    activate(order[idx]);
+  });
+
+  /*function tick(){
+    const now = new Date();
+    const t = now.toLocaleTimeString('en-IN', {hour12:false});
+    document.getElementById('clock').textContent = t + ' IST';
+  }*/
+  function tick() {
+	const now = new Date();
+
+	const date = now.toLocaleDateString('en-IN', {
+		day: '2-digit',
+		month: '2-digit',
+		year: 'numeric'
+	});
+
+	const time = now.toLocaleTimeString('en-IN', {
+		hour12: false
+	});
+	document.getElementById('clock').textContent = date + ' ' + time + ' IST';
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  /* ---------- accordion exclusivity: only one "point" open at a time per section ---------- */
+  document.querySelectorAll('.point-grid').forEach(function(grid){
+    grid.querySelectorAll('details.point').forEach(function(detail){
+      detail.addEventListener('toggle', function(){
+        if(detail.open){
+          grid.querySelectorAll('details.point').forEach(function(other){
+            if(other !== detail && other.open){ other.open = false; }
+          });
+        }
+      });
+    });
+  });
+
+  /* ---------- lightbox ---------- */
+  (function(){
+    const overlay = document.getElementById('lightboxOverlay');
+    const lbImg = document.getElementById('lightboxImg');
+    const lbCaption = document.getElementById('lightboxCaption');
+    const closeBtn = document.getElementById('lightboxClose');
+    const prevBtn = document.getElementById('lightboxPrev');
+    const nextBtn = document.getElementById('lightboxNext');
+
+    // Any image inside a talking-point body can be opened in the lightbox.
+    let gallery = [];
+    let currentIndex = 0;
+    let lastFocused = null;
+
+    function buildGallery(){
+      gallery = Array.from(document.querySelectorAll('.point-body img'));
+    }
+
+    function openLightbox(index){
+      buildGallery();
+      if(!gallery.length) return;
+      currentIndex = index;
+      lastFocused = document.activeElement;
+      showImage(currentIndex);
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      closeBtn.focus();
+    }
+
+    function showImage(index){
+      const img = gallery[index];
+      if(!img) return;
+      lbImg.src = img.src;
+      lbImg.alt = img.alt || '';
+      lbCaption.textContent = img.alt || '';
+      const multi = gallery.length > 1;
+      prevBtn.style.display = multi ? 'flex' : 'none';
+      nextBtn.style.display = multi ? 'flex' : 'none';
+    }
+
+    function closeLightbox(){
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      lbImg.src = '';
+      if(lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+    }
+
+    function showPrev(){
+      if(!gallery.length) return;
+      currentIndex = (currentIndex - 1 + gallery.length) % gallery.length;
+      showImage(currentIndex);
+    }
+    function showNext(){
+      if(!gallery.length) return;
+      currentIndex = (currentIndex + 1) % gallery.length;
+      showImage(currentIndex);
+    }
+
+    document.addEventListener('click', (e) => {
+      const img = e.target.closest('.point-body img');
+      if(!img) return;
+      buildGallery();
+      const idx = gallery.indexOf(img);
+      openLightbox(idx === -1 ? 0 : idx);
+    });
+
+    closeBtn.addEventListener('click', closeLightbox);
+    prevBtn.addEventListener('click', showPrev);
+    nextBtn.addEventListener('click', showNext);
+
+    overlay.addEventListener('click', (e) => {
+      if(e.target === overlay) closeLightbox();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if(!overlay.classList.contains('open')) return;
+      if(e.key === 'Escape') closeLightbox();
+      if(e.key === 'ArrowLeft') showPrev();
+      if(e.key === 'ArrowRight') showNext();
+    });
+  })();
+</script>
+
+</body>
+</html>

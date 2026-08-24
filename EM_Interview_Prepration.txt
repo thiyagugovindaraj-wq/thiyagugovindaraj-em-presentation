@@ -1,0 +1,166 @@
+I’m Thiyagu, and I have around 19 years of experience in the IT industry, with more than 13+ years of that experience at IDP Education.
+
+I'm currently working as a Senior Technical Lead, where I am responsible for providing technical leadership, solution design, application modernization, development, security, performance optimization, and production support across multiple platforms.
+
+I have worked extensively across both backend and frontend technologies, starting with Java, Spring, REST APIs, and database technologies, and later moving into cloud-native and serverless architectures using AWS. My current technical expertise includes AWS services such as Lambda, API Gateway, SQS, SNS, CloudWatch, Cognito, WAF, CloudFront, VPC, Route 53, and RDS PostgreSQL, along with Terraform and CDK for Infrastructure as Code.
+
+At IDP, I have been involved in several key projects and modernization initiatives, particularly app-integration (Java), app-integration-migration(Python), Integration projects (Studnet, ), In Student Placement most of the key projects such as CustomerProfile, Progressive Profile around the Test Taker and BXSearch applications. I have been involved in microservice development, Angular modernization, API implementation, infrastructure setup, CI/CD improvements, and application performance optimization.
+
+I have also been actively involved in application security and quality initiatives, including SonarQube and Snyk remediation, penetration testing remediation, security compliance improvements, and implementing secure development practices.
+
+Overall, I would describe myself as a hands-on Technical Lead with strong experience in cloud modernization, application architecture, security, observability, performance engineering, and team collaboration, with a strong focus on delivering reliable and scalable solutions that provide measurable business value.
+
+
+TODO:
+-----
+1) Proactive monitoring
+2) DLQ Alerts
+3) Cognito Alerts
+
+Srum & Agaile - 
+RACI framework
+SPotify Modle
+GUILD
+Chappter
+TEAM Topology
+Domain assest
+Value stream responsible and accountable
+EM responsibility and accountable
+Stakholder 
+Srum cermony
+
+EM roles and responsibilities
+Techninology Owner Vs Business Owner
+What is Engineering?
+Requirement engineering
+Relaiability, Stability, Security, Scalability, Cost
+Who is owner of the squad
+CSDM
+CR
+SD and TD
+Dora metrixs
+MTTR
+Data driven
+
+PDLC
+
+
+Engineering efficiency
+
+
+1) Platform stability (UI booking deficulties, 48 hours timeline before test, Book on behalf for OSR/Raise OSR, Partition not possible with current structure, RDS break up, Load balancer, Endurance testing, and Penertation testing) to improve the business.
+2) Assests management (Repositories, Deprecate older versions endpoints, Resource rationalization, Issues, and Audit log)
+3) Cost (Apptio Dashboard)
+4) AI (Kiro, Code review, Agenti AI, Vector Database) BedRock, MCP, LLM and SLM
+	Where you'd apply it next: 
+		Using LLMs for support ticket categorization.
+		AI-assisted incident triage (summarizing logs/alerts), 
+		AI-assisted test coverage analysis, 
+		AI-Assisted Code Review
+		
+	Agentic AI
+		Development
+		Code Review
+		Unit testing
+		e2e Testing
+		Logs monitoring
+		
+		
+	
+	Governance & risk: 
+	Data privacy when using AI tools (no sensitive data in prompts to third-party models), 
+	evaluating AI vendors' security posture, 
+	human-in-the-loop review for AI-generated code or content.
+
+5) Vendor management (Voucherify, ICAPPS, ZDITS, IDV, Referral Partner)
+
+
+Booking Journey Optimisation - 
+1) Simpler and faster. 
+2) More seamless customer experience 
+3) Overall booking conversion. 
+4) More than 10 pages to complete a booking, which can create friction and frustration and may lead to booking abandonment. By streamlining the journey and reducing the booking process to 2–3 key pages, we can significantly simplify the experience, reduce drop-offs, and potentially improve the overall booking conversion rate.
+
+48-Hour Booking limitation - Currently, bookings are restricted within 48 hours of the test date, which can limit the overall number of bookings and ultimately impact revenue. We need to identify the underlying bottlenecks, address the technical and operational constraints, and enable bookings within a shorter timeframe to increase booking volume and maximise revenue opportunities.
+
+Booking on Behalf – OSR Enablement - Strengthen the Book-on-Behalf capability for OSR/Raise OSR scenarios, enabling operational teams to support candidates when self-service booking is not possible. The focus should be on improving operational efficiency, reducing booking-related delays, maintaining appropriate controls, and ensuring a reliable fallback mechanism for critical booking journeys.
+
+Database Scalability & Partitioning limitation
+Address the current database structural limitations that prevent effective partitioning. Assess alternative approaches such as data restructuring, archival, indexing, query optimisation or architectural changes to ensure the database can scale with increasing transaction volumes without compromising performance or availability.
+
+RDS Workload Segmentation
+Evaluate the breakup of the existing RDS environment to isolate workloads and reduce resource contention. Separating database workloads can provide better scalability, performance isolation, independent capacity management and a smaller operational blast radius, while also allowing the architecture to evolve with business growth.
+
+Load Balancer & Traffic Resilience
+Strengthen the load-balancing layer to support increasing traffic and maintain high availability. Review traffic distribution, health checks, timeout configurations, connection handling and scaling behaviour, and validate the platform's response to traffic spikes and service failures.
+
+Endurance & Sustained Performance Testing
+Introduce endurance testing to validate that the platform can sustain expected workloads over extended periods. Identify issues such as memory leaks, connection exhaustion, resource degradation, database bottlenecks and gradual performance deterioration before they impact production users
+
+Security & Penetration Testing
+Continuously validate the security posture of critical platform components through penetration testing. Prioritise vulnerabilities based on business risk, establish clear remediation ownership and timelines, and ensure security findings are incorporated into the engineering backlog and release lifecycle.
+
+AI - Booked session grouping 
+
+Incident management
+Platform eficientcy
+
+
+Calud 
+ChatGPT
+Jemini
+
+
+Problem Statement (PS):
+
+1) Platform Stability:
+Define reliability targets: SLIs/SLOs/SLAs — e.g., 99.9% API uptime, latency budgets. Mention error budgets as a way to balance feature velocity vs. stability.
+Observability stack: CloudWatch dashboards/alarms, structured logging, distributed tracing — you can speak to this directly from your Lambda/API Gateway work at IDP.
+Incident management: on-call rotations, severity levels, runbooks, blameless postmortems (5-whys), and closing the loop with action items.
+Resilience patterns: retries with backoff, circuit breakers, dead-letter queues (you've done this with SNS/SQS DLQs), multi-AZ/VPC design, graceful degradation.
+Proactive practices: load testing, chaos/failure injection, capacity planning ahead of peak traffic (e.g., enrollment season spikes for an education platform).
+Sample story: "We built DLQ-backed messaging pipelines between microservices to guarantee zero message loss — reduced production incidents tied to dropped events by X%."
+Asset Management
+
+What interviewers are probing for: whether you can track and govern what the org owns — infra, licenses, tech debt — not just build features.
+
+Cloud resource inventory: tagging strategy (owner, environment, cost center), using Terraform state as a source of truth for infra assets.
+Lifecycle management: provisioning, decommissioning unused resources (stale S3 buckets, orphaned Lambdas, idle RDS instances) — ties directly to cost control.
+Software/license management: tracking third-party libraries, SaaS subscriptions, and license renewals to avoid compliance gaps or shelfware.
+Technical debt as an asset: maintaining a debt register, prioritizing remediation alongside feature work.
+CMDB/documentation: architecture diagrams, service catalogs, ownership mapping so no service is a "bus factor of one."
+Sample story: "Using Terraform as IaC gave us a single audit trail of every AWS resource — made quarterly access and cost reviews straightforward instead of manual discovery."
+Cost
+
+What interviewers are probing for: FinOps mindset — do you treat cloud spend as an engineering responsibility?
+
+Visibility: cost allocation tags, AWS Cost Explorer/Budgets, per-service or per-team cost attribution.
+Optimization levers: right-sizing compute, Lambda memory/timeout tuning, S3 lifecycle policies, Reserved Instances/Savings Plans for predictable workloads, spot instances for non-critical jobs.
+Serverless cost angle: you can speak to this well — Lambda/API Gateway pay-per-use models naturally reduce idle spend vs. always-on servers.
+Governance: budget alerts, monthly cost review cadence with engineering leads, killing zombie resources.
+Trade-off framing: cost vs. reliability vs. speed — e.g., over-provisioning for safety margins costs money; show you can make that call deliberately, not by default.
+Sample story: "Moved a workload to event-driven Lambda/SQS instead of always-on EC2, cutting compute cost by X% while improving elasticity during peak load."
+AI
+
+What interviewers are probing for: pragmatic, current thinking — not hype. As an EM, they want to know how you'll drive AI adoption responsibly.
+
+Engineering productivity: AI coding assistants (Copilot-style tools) for code review, test generation, documentation — and how you'd measure actual impact (cycle time, PR turnaround) rather than assume value.
+Product use cases: you already have a relevant example — the voice-enabled chatbot (speech-to-text/text-to-speech) you built at HCIndia. Frame that as early hands-on AI/NLP integration experience.
+Governance & risk: data privacy when using AI tools (no sensitive data in prompts to third-party models), evaluating AI vendors' security posture, human-in-the-loop review for AI-generated code or content.
+Team enablement: training the team on responsible AI tool usage, setting guardrails rather than blanket bans.
+Where you'd apply it next: AI-assisted incident triage (summarizing logs/alerts), AI-assisted test coverage analysis, or using LLMs for support ticket categorization.
+Sample story: "Built the audio chatbot's STT/TTS pipeline at HCIndia — taught me how to evaluate AI vendor APIs for accuracy, latency, and cost before committing to production use."
+Vendor Management
+
+What interviewers are probing for: can you manage external dependencies (SaaS, cloud, consulting) as strategically as internal teams?
+
+Selection criteria: security/compliance posture, SLA guarantees, pricing model, support responsiveness, exit/portability options (avoiding lock-in).
+Contract & SLA management: negotiating uptime guarantees, penalty clauses, renewal timelines; tracking vendor performance against SLA.
+Relationship management: regular vendor review cadence, escalation paths, scorecards.
+Risk mitigation: multi-vendor or fallback strategy for critical dependencies, understanding data ownership/portability in contracts.
+Your AWS angle: even though AWS itself is the "vendor," you can talk about evaluating AWS managed services (Cognito vs. building your own auth, RDS vs. self-managed DB) as build-vs-buy vendor decisions.
+Sample story: "Evaluated managed AWS services (Cognito, RDS) against self-hosted alternatives — weighed total cost of ownership and support burden, not just sticker price, before recommending a path."
+
+
+L1: conducted by 2 EMs in the panel evaluate technical relevance, hand on expreince, ways of working, understadning of the product, communication, etc
+L2: conducted by HOEs, Communication, stakholder manageemnt, critical thinking, experience in handling critical situations, people management, etc

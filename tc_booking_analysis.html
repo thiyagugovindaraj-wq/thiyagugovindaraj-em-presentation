@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Centre Booking Analysis</title>
+<style>
+  :root {
+    --bg:#faf9f5; --card:#fff; --border:#e5e3da; --text:#2d2d2a; --muted:#6b6a63;
+    --blue:#2a78d6; --red:#d64545; --amber:#e0972a; --green:#3e9b5c;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); margin:0; padding:1.5rem; }
+  .wrap { max-width: 1150px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.2rem; }
+  p.sub { color:var(--muted); margin-top:0; margin-bottom:1.25rem; font-size:0.95rem; }
+
+  .stats-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:0.75rem; margin-bottom:1.25rem; }
+  .stat { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:0.9rem 1rem; }
+  .stat .num { font-size:1.4rem; font-weight:700; }
+  .stat .lbl { font-size:0.78rem; color:var(--muted); margin-top:2px; }
+
+  .tabs { display:flex; gap:0.4rem; margin-bottom:1rem; flex-wrap:wrap; border-bottom:1px solid var(--border); padding-bottom:0; }
+  .tab-btn { background:none; border:none; padding:0.6rem 1rem; font-size:0.92rem; color:var(--muted); cursor:pointer; border-bottom:3px solid transparent; font-weight:600; }
+  .tab-btn.active { color:var(--blue); border-bottom-color:var(--blue); }
+  .tab-btn:hover { color:var(--text); }
+
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; box-shadow:0 1px 3px rgba(0,0,0,0.04); margin-bottom:1.25rem; }
+  .card h2 { font-size:1.05rem; margin-top:0; margin-bottom:0.9rem; }
+  canvas { max-height: 420px; }
+
+  table { width:100%; border-collapse:collapse; font-size:0.86rem; }
+  th, td { text-align:left; padding:0.5rem 0.6rem; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-weight:600; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.03em; }
+  tr:hover td { background:#f5f4ee; }
+  .pct-bar-wrap { display:flex; align-items:center; gap:8px; }
+  .pct-bar-bg { flex:1; background:#eeece3; border-radius:4px; height:8px; overflow:hidden; }
+  .pct-bar-fill { height:100%; background:var(--red); border-radius:4px; }
+
+  .note { margin-top:0.5rem; font-size: 0.85rem; color:var(--muted); background:#f5f4ee; border-radius:8px; padding:12px 16px; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.72rem; font-weight:600; }
+  .badge-red { background:#fbe4e4; color:#a83232; }
+  .badge-amber { background:#fbeed9; color:#96660f; }
+  .badge-green { background:#e3f2e6; color:#256b3c; }
+  .badge-gray { background:#ececea; color:#5a5952; }
+
+  .two-col { display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Test Centre Booking Analysis - Last 15 days</h1>
+  <p class="sub">Snapshot dataset · 234 test centres worldwide</p>
+
+  <div class="stats-row">
+    <div class="stat"><div class="num" id="statTotal">-</div><div class="lbl">Total test centres</div></div>
+    <div class="stat"><div class="num" id="statActive">-</div><div class="lbl">Centres with sessions</div></div>
+    <div class="stat"><div class="num" id="statCriticalLow">-</div><div class="lbl">"CRITICAL LOW" centres</div></div>
+    <div class="stat"><div class="num" id="statNoBookings">-</div><div class="lbl">"NO BOOKINGS" centres</div></div>
+    <div class="stat"><div class="num" id="statAvgPct">-</div><div class="lbl">Avg booking % (active)</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="alerts">Alert Levels</button>
+    <button class="tab-btn" data-tab="distribution">Booking % Distribution</button>
+    <button class="tab-btn" data-tab="worst">Less Performing Centres</button>
+    <button class="tab-btn" data-tab="nosessions">No Sessions Centres</button>
+  </div>
+
+  <div class="tab-panel active" id="panel-overview">
+    <div class="card">
+      <h2>Top 30 test centres by capacity — capacity vs. booked</h2>
+      <div style="position:relative; height:620px;"><canvas id="chartTop30"></canvas></div>
+    </div>
+    <div class="note">Ranked by total seat capacity out of all 234 centres. Bar length shows total capacity (blue) against seats actually booked (orange) — the gap between the two is unused capacity at that centre.</div>
+  </div>
+
+  <div class="tab-panel" id="panel-alerts">
+    <div class="two-col">
+      <div class="card">
+        <h2>Centres by booking alert level</h2>
+        <canvas id="chartAlertPie"></canvas>
+      </div>
+      <div class="card">
+        <h2>Count of centres per alert level</h2>
+        <canvas id="chartAlertBar"></canvas>
+      </div>
+    </div>
+    <div class="note">"NO SESSIONS" centres (75) have zero scheduled capacity and are excluded from the booking-% average. The remaining 159 active centres split across CRITICAL LOW, LOW, MODERATE and HIGH booking tiers.</div>
+  </div>
+
+  <div class="tab-panel" id="panel-distribution">
+    <div class="card">
+      <h2>Distribution of centres by booking %</h2>
+      <canvas id="chartDist"></canvas>
+    </div>
+    <div class="note">75 centres sit at exactly 0% (no sessions or no bookings at all). Among the rest, the largest single band is 25%–50% booked (46 centres), with 32 centres already above 75% booked.</div>
+  </div>
+
+  <div class="tab-panel" id="panel-worst">
+    <div class="card">
+      <h2>Lowest booking % among active centres (bottom 20)</h2>
+      <table id="tblWorst"><thead><tr><th>Centre</th><th>Code</th><th>Capacity</th><th>Booked</th><th>Booking %</th><th>Alert</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="note">Limited to centres with at least one scheduled seat (capacity &gt; 0), so "NO SESSIONS" centres — which have nothing to book — don't crowd out centres that are genuinely under-booked.</div>
+  </div>
+
+  <div class="tab-panel" id="panel-nosessions">
+    <div class="card">
+      <h2>Test centres with no sessions created (<span id="nsCount">-</span>)</h2>
+      <table id="tblNoSessions"><thead><tr><th>#</th><th>Centre</th><th>Code</th><th>Alert</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="note">These centres have zero total capacity in the dataset — no sessions have been created for them yet, so there's nothing to book. Several entries here are placeholder or decommissioned codes (e.g. "DO NOT USE" and "Closed" records) rather than active centres awaiting sessions.</div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const NO_SESSIONS = [{"name": "Wall Street English Rimini", "code": "IT975"}, {"name": "EXAMS FACTORY", "code": "ES103"}, {"name": "Hinti Academy - Unaizah", "code": "SA676"}, {"name": "Objective English", "code": "IT421"}, {"name": "IDP Education Jeddah (Female)", "code": "SA355"}, {"name": "ADD (Asre-Din-o-Danesh)", "code": "IR026"}, {"name": "University Of Auckland", "code": "NZ018"}, {"name": "I-genius Language Institute Chiang Mai", "code": "TH056"}, {"name": "IDP Kuwait", "code": "KW028"}, {"name": "IDP Education West Cairo", "code": "EG204"}, {"name": "InterPass Institute", "code": "TH502"}, {"name": "IDP IELTS Dubai - Content Training Centre - Computer Delivered", "code": "AE419"}, {"name": "Western Sydney University", "code": "AU242"}, {"name": "DO NOT USE", "code": "ZZ000"}, {"name": "IDP Education Ltd - CD IELTS DATSC Dubai (DISC)", "code": "AE417"}, {"name": "International House Milano", "code": "IT146"}, {"name": "International House Rome", "code": "IT240"}, {"name": "India VCS Hub", "code": "IN550"}, {"name": "IDP IELTS Canberra", "code": "AU503"}, {"name": "EF English First Test Centre Male Female", "code": "SA078"}, {"name": "IDP Education Alexandria", "code": "EG750"}, {"name": "European Examinations Centre", "code": "EA003"}, {"name": "IDP IELTS Test Centre Sydney", "code": "AU468"}, {"name": "IDP IELTS Osaka Test Centre", "code": "JP033"}, {"name": "Wall Street English Milan Loreto", "code": "IT989"}, {"name": "Precise Solutions 2300 Yonge St", "code": "CA280"}, {"name": "IRSAFAM CULTURAL AND ARTS INSTITUTES", "code": "IR120"}, {"name": "ILAC Toronto", "code": "CA816"}, {"name": "MK Consultoria em Idiomas", "code": "BR715"}, {"name": "IDP Education Sharjah", "code": "AE415"}, {"name": "Chindwin-PSB Institute", "code": "MM024"}, {"name": "Saudi British Centre - Alkhobar  (Female)", "code": "SA081"}, {"name": "IDP IELTS Test Centre Brisbane", "code": "AU467"}, {"name": "International House Milano - Turin Project", "code": "IT694"}, {"name": "UTS College", "code": "AU860"}, {"name": "Closed - IELTS Harmony, Harmony Education LLC", "code": "EG208"}, {"name": "IDP Education, Istanbul Asian Side", "code": "TR150"}, {"name": "DO NOT USE 3", "code": "ZZ003"}, {"name": "IELTS IDP Test Centre Melbourne", "code": "AU240"}, {"name": "Wall Street English, Bologna", "code": "IT578"}, {"name": "UniHouse Iraq", "code": "IQ025"}, {"name": "IDP IELTS Al Ain Computer Delivered", "code": "AE104"}, {"name": "Unihouse, Amman", "code": "JO300"}, {"name": "AEO Peshawar Pakistan", "code": "PK319"}, {"name": "Lord Byron College Bari", "code": "IT351"}, {"name": "DO NOT USE 2", "code": "ZZ002"}, {"name": "IDP Education, Riyadh (Female)", "code": "SA354"}, {"name": "Unitec Institute of Technology", "code": "NZ015"}, {"name": "Macquarie University", "code": "AU108"}, {"name": "IDP IELTS Test Centre Perth", "code": "AU080"}, {"name": "IDP Education Dammam (Male & Female)", "code": "SA353"}, {"name": "DO NOT USE 1", "code": "ZZ001"}, {"name": "IDP Education - RA Gapuz Baguio (Do Not Use)", "code": "PH024"}, {"name": "Wall Street English Catania", "code": "IT594"}, {"name": "Wall Street English Roma", "code": "IT759"}, {"name": "IELTS Tehran", "code": "IR010"}, {"name": "IDP IELTS Global Hub", "code": "AU550"}, {"name": "IDP IELTS Tokyo Test Centre", "code": "JP035"}, {"name": "IDP IELTS Test Centre", "code": "HK022"}, {"name": "Japan Study Abroad Foundation / Osaka Nishi Umeda", "code": "JP114"}, {"name": "Conestoga College - British Columbia", "code": "CA903"}, {"name": "Wall Street English Bari", "code": "IY006"}, {"name": "Wall Street English, Florence", "code": "IT857"}, {"name": "IDP IELTS Test Centre Adelaide", "code": "AU110"}, {"name": "Paradigm Language Institute", "code": "TH055"}, {"name": "The Cambridge School Salerno", "code": "IT512"}, {"name": "IDP IELTS Test Centre Melbourne", "code": "AU241"}, {"name": "International House Madrid", "code": "ES635"}, {"name": "Precise Solutions Calgary", "code": "CA211"}, {"name": "IDP IELTS Sharjah (Skyline University)", "code": "AE414"}, {"name": "Wall Street English Verona", "code": "IT456"}, {"name": "Conestoga College - GTA", "code": "CA505"}, {"name": "Melbourne-RMIT", "code": "AU056"}, {"name": "Massey University", "code": "NZ151"}, {"name": "IDP IELTS Abu Dhabi - Al Bayan International Institute - Computer Delivered", "code": "AE298"}];
+
+const DATA = {"total_centres": 234, "active_centres": 159, "no_sessions": 75, "no_bookings": 1, "critical_low": 42, "low": 46, "moderate": 37, "high": 33, "avg_pct_active": 48.08, "top30": [{"name": "IDP IELTS Vietnam Hanoi", "code": "VN104", "capacity": 17332, "booked": 9567, "pct": 55.2}, {"name": "Zhongke Digital Intelligence Testing Services Co.", "code": "CX340", "capacity": 15352, "booked": 13791, "pct": 89.83}, {"name": "IDP IELTS Vietnam Ho Chi Minh", "code": "VN101", "capacity": 12054, "booked": 8721, "pct": 72.35}, {"name": "Edu-Action Tashkent", "code": "UZ004", "capacity": 12021, "booked": 6781, "pct": 56.41}, {"name": "IDP IELTS Australia", "code": "AU900", "capacity": 9628, "booked": 7658, "pct": 79.54}, {"name": "MOD EDUCATION Nigeria", "code": "NG448", "capacity": 6180, "booked": 835, "pct": 13.51}, {"name": "IDP Education Canada Markham", "code": "CA067", "capacity": 6164, "booked": 2396, "pct": 38.87}, {"name": "IDP Education Bangladesh Private Limited", "code": "BD050", "capacity": 6035, "booked": 1176, "pct": 19.49}, {"name": "IELTS on Computer IA008", "code": "IA008", "capacity": 4634, "booked": 4618, "pct": 99.65}, {"name": "IELTS IDP Indonesia", "code": "ID017", "capacity": 4554, "booked": 1432, "pct": 31.44}, {"name": "IDP IELTS Thailand", "code": "TH011", "capacity": 4059, "booked": 2150, "pct": 52.97}, {"name": "IDP IELTS Kuwait", "code": "KW033", "capacity": 3689, "booked": 1690, "pct": 45.81}, {"name": "IDP Nigeria", "code": "NG126", "capacity": 3653, "booked": 911, "pct": 24.94}, {"name": "IDP Education - Philippines", "code": "PH009", "capacity": 3604, "booked": 840, "pct": 23.31}, {"name": "IDP IELTS Kazakhstan, Almaty", "code": "KZ005", "capacity": 3232, "booked": 1976, "pct": 61.14}, {"name": "IDP IELTS Kazakhstan, Astana", "code": "KZ004", "capacity": 3217, "booked": 1531, "pct": 47.59}, {"name": "IELTS on Computer IA007", "code": "IA007", "capacity": 2976, "booked": 2970, "pct": 99.8}, {"name": "IDP Canada Test Centre Vancouver", "code": "CA817", "capacity": 2910, "booked": 1375, "pct": 47.25}, {"name": "AEO Lahore", "code": "PK175", "capacity": 2864, "booked": 1001, "pct": 34.95}, {"name": "Japan Study Abroad Foundation (JSAF)", "code": "JP112", "capacity": 2830, "booked": 2325, "pct": 82.16}, {"name": "IDP Education Canada Edmonton", "code": "CA841", "capacity": 2615, "booked": 1166, "pct": 44.59}, {"name": "IELTS on Computer IA009", "code": "IA009", "capacity": 2233, "booked": 2230, "pct": 99.87}, {"name": "IDP Education Istanbul", "code": "TR100", "capacity": 2211, "booked": 1000, "pct": 45.23}, {"name": "AEO Karachi", "code": "PK601", "capacity": 2145, "booked": 194, "pct": 9.04}, {"name": "IDP Education Colombo", "code": "LK012", "capacity": 2114, "booked": 341, "pct": 16.13}, {"name": "AEO Islamabad", "code": "PK602", "capacity": 1992, "booked": 474, "pct": 23.8}, {"name": "IDP IELTS New Zealand", "code": "NZ150", "capacity": 1913, "booked": 1526, "pct": 79.77}, {"name": "IDP Education Islamabad", "code": "PK361", "capacity": 1820, "booked": 537, "pct": 29.51}, {"name": "IDP Education Dubai", "code": "AE750", "capacity": 1591, "booked": 1327, "pct": 83.41}, {"name": "Australian Institute of Language", "code": "AU099", "capacity": 1568, "booked": 1317, "pct": 83.99}], "worst": [{"name": "IDP Education - Hong Kong", "code": "HK027", "capacity": 216, "booked": 0, "pct": 0.0, "alert": "NO BOOKINGS"}, {"name": "Homeland Testing Centres", "code": "CA902", "capacity": 200, "booked": 8, "pct": 4.0, "alert": "CRITICAL LOW"}, {"name": "ERSHAD FOR QUALIFYING AND TRAINING HUMAN RESOURCE", "code": "IQ026", "capacity": 187, "booked": 16, "pct": 8.56, "alert": "CRITICAL LOW"}, {"name": "AEO Karachi", "code": "PK601", "capacity": 2145, "booked": 194, "pct": 9.04, "alert": "CRITICAL LOW"}, {"name": "Precise Solutions", "code": "CA278", "capacity": 110, "booked": 10, "pct": 9.09, "alert": "CRITICAL LOW"}, {"name": "Horizon Consultants", "code": "ZA039", "capacity": 536, "booked": 55, "pct": 10.26, "alert": "CRITICAL LOW"}, {"name": "Buckingham English Center", "code": "EC078", "capacity": 233, "booked": 26, "pct": 11.16, "alert": "CRITICAL LOW"}, {"name": "MTS Brasil Sao Paulo", "code": "BR160", "capacity": 349, "booked": 41, "pct": 11.75, "alert": "CRITICAL LOW"}, {"name": "INTERNATIONAL HOUSE URUGUAY", "code": "UY112", "capacity": 32, "booked": 4, "pct": 12.5, "alert": "CRITICAL LOW"}, {"name": "MOD EDUCATION Nigeria", "code": "NG448", "capacity": 6180, "booked": 835, "pct": 13.51, "alert": "CRITICAL LOW"}, {"name": "IDP IELTS Ghana", "code": "GH108", "capacity": 453, "booked": 62, "pct": 13.69, "alert": "CRITICAL LOW"}, {"name": "IDP Education Bahrain", "code": "BH046", "capacity": 576, "booked": 80, "pct": 13.89, "alert": "CRITICAL LOW"}, {"name": "Saudi British Centre Jeddah", "code": "SA043", "capacity": 1061, "booked": 152, "pct": 14.33, "alert": "CRITICAL LOW"}, {"name": "INTERNATIONAL HOUSE BOGOTA", "code": "CO030", "capacity": 544, "booked": 78, "pct": 14.34, "alert": "CRITICAL LOW"}, {"name": "CD IELTS - IDP Education Muscat", "code": "OM150", "capacity": 862, "booked": 124, "pct": 14.39, "alert": "CRITICAL LOW"}, {"name": "IELTS At Home IDP", "code": "101IH", "capacity": 420, "booked": 63, "pct": 15.0, "alert": "CRITICAL LOW"}, {"name": "IDP West Surabaya", "code": "ID405", "capacity": 582, "booked": 88, "pct": 15.12, "alert": "CRITICAL LOW"}, {"name": "IDP Education Colombo", "code": "LK012", "capacity": 2114, "booked": 341, "pct": 16.13, "alert": "CRITICAL LOW"}, {"name": "IDP Education Karachi", "code": "PK363", "capacity": 1535, "booked": 250, "pct": 16.29, "alert": "CRITICAL LOW"}, {"name": "ACADEMIA DE IDIOMAS MULTILINGUA BOGOTA", "code": "CO013", "capacity": 195, "booked": 32, "pct": 16.41, "alert": "CRITICAL LOW"}], "bucket_labels": ["0% (no sessions/bookings)", ">0% - 10%", "10% - 25%", "25% - 50%", "50% - 75%", "75% - 100%"], "bucket_counts": [75, 4, 39, 46, 37, 32]};
+
+document.getElementById('statTotal').textContent = DATA.total_centres.toLocaleString();
+document.getElementById('statActive').textContent = DATA.active_centres.toLocaleString();
+document.getElementById('statCriticalLow').textContent = DATA.critical_low.toLocaleString();
+document.getElementById('statNoBookings').textContent = DATA.no_bookings.toLocaleString();
+document.getElementById('statAvgPct').textContent = DATA.avg_pct_active + '%';
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Chart 1: Top 30 by capacity — horizontal grouped bars
+const top30Labels = DATA.top30.map(r => r.code + ' — ' + r.name);
+new Chart(document.getElementById('chartTop30'), {
+  type: 'bar',
+  data: {
+    labels: top30Labels,
+    datasets: [
+      { label: 'Total capacity', data: DATA.top30.map(r => r.capacity), backgroundColor: '#2a78d6', borderRadius: 3, maxBarThickness: 14 },
+      { label: 'Total booked', data: DATA.top30.map(r => r.booked), backgroundColor: '#e0972a', borderRadius: 3, maxBarThickness: 14 }
+    ]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: { ticks: { color: '#6b6a63' }, grid: { color: '#e5e3da' }, title: { display: true, text: 'Seats', color: '#6b6a63' }, beginAtZero: true },
+      y: { ticks: { color: '#6b6a63', font: { size: 10 } }, grid: { display: false } }
+    },
+    plugins: { legend: { position: 'top' } }
+  }
+});
+
+// Chart 2: Alert level pie
+new Chart(document.getElementById('chartAlertPie'), {
+  type: 'pie',
+  data: {
+    labels: ['NO SESSIONS', 'NO BOOKINGS', 'CRITICAL LOW', 'LOW', 'MODERATE', 'HIGH'],
+    datasets: [{
+      data: [DATA.no_sessions, DATA.no_bookings, DATA.critical_low, DATA.low, DATA.moderate, DATA.high],
+      backgroundColor: ['#b7b5aa', '#d64545', '#e0972a', '#e8c14a', '#2a78d6', '#3e9b5c']
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { position: 'right', labels: { color: '#2d2d2a', boxWidth: 14 } } } }
+});
+
+// Chart 3: Alert level bar
+new Chart(document.getElementById('chartAlertBar'), {
+  type: 'bar',
+  data: {
+    labels: ['NO SESSIONS', 'NO BOOKINGS', 'CRITICAL LOW', 'LOW', 'MODERATE', 'HIGH'],
+    datasets: [{
+      label: 'Number of centres',
+      data: [DATA.no_sessions, DATA.no_bookings, DATA.critical_low, DATA.low, DATA.moderate, DATA.high],
+      backgroundColor: ['#b7b5aa', '#d64545', '#e0972a', '#e8c14a', '#2a78d6', '#3e9b5c'],
+      borderRadius: 4, maxBarThickness: 40
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      x: { ticks: { color: '#6b6a63' }, grid: { display: false } },
+      y: { ticks: { color: '#6b6a63' }, grid: { color: '#e5e3da' }, title: { display: true, text: 'Number of centres', color: '#6b6a63' }, beginAtZero: true }
+    },
+    plugins: { legend: { display: false } }
+  }
+});
+
+// Chart 4: Booking % distribution
+new Chart(document.getElementById('chartDist'), {
+  type: 'bar',
+  data: {
+    labels: DATA.bucket_labels,
+    datasets: [{ label: 'Number of centres', data: DATA.bucket_counts, backgroundColor: '#2a78d6', borderRadius: 4, maxBarThickness: 60 }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      x: { ticks: { color: '#6b6a63' }, grid: { display: false } },
+      y: { ticks: { color: '#6b6a63' }, grid: { color: '#e5e3da' }, title: { display: true, text: 'Number of centres', color: '#6b6a63' }, beginAtZero: true }
+    },
+    plugins: { legend: { display: false } }
+  }
+});
+
+// Table: worst centres
+function alertBadge(level) {
+  if (level === 'NO BOOKINGS') return `<span class="badge badge-red">${level}</span>`;
+  if (level === 'CRITICAL LOW') return `<span class="badge badge-amber">${level}</span>`;
+  return `<span class="badge badge-green">${level}</span>`;
+}
+const tblWorst = document.querySelector('#tblWorst tbody');
+DATA.worst.forEach(r => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${r.name}</td><td><strong>${r.code}</strong></td><td>${r.capacity.toLocaleString()}</td><td>${r.booked.toLocaleString()}</td>
+    <td><div class="pct-bar-wrap"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${Math.max(r.pct,2)}%"></div></div><span>${r.pct}%</span></div></td>
+    <td>${alertBadge(r.alert)}</td>`;
+  tblWorst.appendChild(tr);
+});
+
+// Table: no sessions centres
+document.getElementById('nsCount').textContent = NO_SESSIONS.length;
+const tblNS = document.querySelector('#tblNoSessions tbody');
+NO_SESSIONS.forEach((r, i) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${i + 1}</td><td>${r.name}</td><td><strong>${r.code}</strong></td><td><span class="badge badge-gray">NO SESSIONS</span></td>`;
+  tblNS.appendChild(tr);
+});
+</script>
+</body>
+</html>
